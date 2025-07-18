@@ -11,6 +11,8 @@ export class Game {
   private saveManager: SaveManager;
   private uiRenderer: UIRenderer;
   private eventHandlers: { [key: string]: GameEventHandler[] } = {};
+  private currentSceneDialogueHistory: DialogueEntry[] = []; // Lưu trữ lịch sử dialogue của scene hiện tại
+  private globalDialogueHistory: Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> = []; // Lưu trữ toàn bộ lịch sử dialogue
 
   constructor(script: GameScript) {
     this.script = script;
@@ -62,6 +64,7 @@ export class Game {
 
     this.state.currentScene = sceneId;
     this.state.currentDialogue = 0;
+    this.currentSceneDialogueHistory = []; // Reset lịch sử dialogue khi chuyển scene
 
     // Load background music
     if (scene.music) {
@@ -84,6 +87,21 @@ export class Game {
     if (!dialogue) {
       this.emit('end', {});
       return;
+    }
+
+    if (!this.currentSceneDialogueHistory.includes(dialogue)) {
+      this.currentSceneDialogueHistory.push(dialogue);
+    }
+
+    const existingGlobalEntry = this.globalDialogueHistory.find(
+      entry => entry.dialogue === dialogue && entry.sceneId === this.state.currentScene
+    );
+    if (!existingGlobalEntry) {
+      this.globalDialogueHistory.push({
+        dialogue: dialogue,
+        sceneId: this.state.currentScene,
+        timestamp: new Date()
+      });
     }
 
     this.uiRenderer.updateDialogue(dialogue);
@@ -118,6 +136,13 @@ export class Game {
     }
 
     this.showDialogue();
+  }
+
+  back(): void {
+    if (this.state.currentDialogue > 0) {
+      this.state.currentDialogue--;
+      this.showDialogue();
+    }
   }
 
   // Handle user choice
@@ -178,6 +203,18 @@ export class Game {
   // Getters
   getCurrentScene(): Scene | undefined {
     return this.script.scenes.find(s => s.id === this.state.currentScene);
+  }
+
+  getCurrentSceneDialogueHistory(): DialogueEntry[] {
+    return [...this.currentSceneDialogueHistory];
+  }
+
+  getGlobalDialogueHistory(): Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> {
+    return [...this.globalDialogueHistory];
+  }
+
+  getSceneById(sceneId: string): Scene | undefined {
+    return this.script.scenes.find(s => s.id === sceneId);
   }
 
   getState(): GameState {
