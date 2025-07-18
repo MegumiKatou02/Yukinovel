@@ -212,17 +212,30 @@ export class UIRenderer {
     characters.forEach((character, index) => {
       if (character.image) {
         const charElement = document.createElement('div');
+        
+        const position = character.position || {};
+        const x = position.x !== undefined ? position.x : (20 + index * 200);
+        const y = position.y !== undefined ? position.y : 0;
+        const width = position.width || 300;
+        const height = position.height || 400;
+        const scale = position.scale || 1;
+        
+        const xValue = typeof x === 'string' ? x : `${x}px`;
+        const yValue = typeof y === 'string' ? y : `${y}px`;
+        
         charElement.style.cssText = `
           position: absolute;
-          bottom: 0;
-          left: ${20 + index * 200}px;
-          width: 300px;
-          height: 400px;
+          bottom: ${yValue};
+          left: ${xValue};
+          width: ${width}px;
+          height: ${height}px;
           background-image: url(${character.image});
           background-size: contain;
           background-position: bottom;
           background-repeat: no-repeat;
           transition: opacity 0.5s ease;
+          transform: scale(${scale});
+          transform-origin: bottom center;
         `;
         charElement.id = `character-${character.name}`;
         this.characterContainer.appendChild(charElement);

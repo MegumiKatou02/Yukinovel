@@ -4,6 +4,13 @@ export interface Character {
   image?: string;
   color?: string;
   emotions?: { [key: string]: string };
+  position?: {
+    x?: number | string;
+    y?: number | string;
+    width?: number;
+    height?: number;
+    scale?: number;
+  };
 }
 
 // Scene types
