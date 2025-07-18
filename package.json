@@ -1,0 +1,43 @@
+{
+  "name": "yukinovel",
+  "version": "1.0.0",
+  "description": "A powerful TypeScript framework for creating beautiful Visual Novel games",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "example": "cd test && npm run build"
+  },
+  "keywords": [
+    "visual-novel",
+    "game",
+    "typescript",
+    "interactive-fiction",
+    "story",
+    "anime"
+  ],
+  "author": "Yukiookii",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.19.8",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/howler": "^2.2.7",
+    "howler": "^2.2.4"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MegumiKatou02/Yukinovel.git"
+  }
+}

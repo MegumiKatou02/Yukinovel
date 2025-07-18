@@ -1,0 +1,7 @@
+dist/
+dist_test/
+
+*.jpg
+*.png
+
+node_modules/
