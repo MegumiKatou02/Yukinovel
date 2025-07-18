@@ -4,6 +4,54 @@ const game = new Game({
     title: 'ATRI',
     author: 'Yukiookii',
     version: '1.0.0',
+    languages: [
+        { code: 'vi', name: 'Tiếng Việt', isDefault: true },
+        { code: 'en', name: 'English' },
+        { code: 'ja', name: '日本語' },
+        { code: 'fr', name: 'Français' }
+    ],
+    localization: {
+    ui: {
+      'menu.start': {
+        vi: 'BẮT ĐẦU',
+        en: 'START',
+        ja: 'スタート',
+        fr: 'COMMENCER'
+      },
+      'menu.continue': {
+        vi: 'TIẾP TỤC',
+        en: 'CONTINUE',
+        ja: '続ける',
+        fr: 'CONTINUER'
+      },
+      'menu.settings': {
+        vi: 'CÀI ĐẶT',
+        en: 'SETTINGS',
+        ja: '設定',
+        fr: 'PARAMÈTRES'
+      },
+      'ui.version': {
+        vi: 'Phiên bản',
+        en: 'Version',
+        ja: 'バージョン',
+        fr: 'Version'
+      },
+      'ui.author': {
+        vi: 'Tác giả',
+        en: 'Author',
+        ja: '作者',
+        fr: 'Auteur'
+      }
+    },
+    system: {
+      'narrator.name': {
+        vi: 'Người kể chuyện',
+        en: 'Narrator',
+        ja: 'ナレーター',
+        fr: 'Narrateur'
+      }
+    }
+  },
     settings: {
         width: 'calc(100vw - 200px)',
         height: 'calc(100vh - 30px)',
@@ -98,7 +146,10 @@ const game = new Game({
             dialogue: [
                 {
                     character: 'narrator',
-                    text: 'Trong một vương quốc xa xôi, nơi có những ngọn núi cao chót vót và những khu rừng bí ẩn...',
+                    text: {
+                        vi: 'Trong một vương quốc xa xôi, nơi có những ngọn núi cao chót vót và những khu rừng bí ẩn...',
+                        en: 'he he he'
+                    }
                    
                 },
                 {

@@ -13,7 +13,17 @@ export interface Character {
   };
 }
 
-// Scene types
+export interface LocalizedText {
+  [languageCode: string]: string;
+}
+
+export interface LanguageConfig {
+  code: string;
+  name: string;
+  flag?: string;
+  isDefault?: boolean;
+}
+
 export interface Scene {
   id: string;
   background?: string;
@@ -25,7 +35,7 @@ export interface Scene {
 // Dialogue types
 export interface DialogueEntry {
   character?: string;
-  text: string;
+  text: string | LocalizedText;
   emotion?: string;
   sprite?: string;
   characterSprite?: { [characterName: string]: string | null };
@@ -36,19 +46,28 @@ export interface DialogueEntry {
 }
 
 export interface Choice {
-  text: string;
+  text: string | LocalizedText;
   action: 'jump' | 'end';
   target?: string;
 }
 
 // Game script
 export interface GameScript {
-  title: string;
+  title: string | LocalizedText;
   author?: string;
   version?: string;
   characters: { [key: string]: Character };
   scenes: Scene[];
   settings?: GameSettings;
+  languages?: LanguageConfig[];
+  localization?: {
+    ui?: {
+      [key: string]: LocalizedText;
+    };
+    system?: {
+      [key: string]: LocalizedText;
+    };
+  };
 }
 
 // Game settings
@@ -70,7 +89,7 @@ export interface MainMenuConfig {
   backgroundOverlay?: string;
   music?: string;
   title?: {
-    text?: string;
+    text?: string | LocalizedText;
     color?: string;
     fontSize?: number;
     fontFamily?: string;
@@ -80,7 +99,7 @@ export interface MainMenuConfig {
   };
   subtitle?: {
     show?: boolean;
-    text?: string;
+    text?: string | LocalizedText;
     color?: string;
     fontSize?: number;
   };

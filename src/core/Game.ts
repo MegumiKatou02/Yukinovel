@@ -2,6 +2,7 @@ import { GameScript, GameState, GameEvent, GameEventHandler, Scene, DialogueEntr
 import { AudioManager } from './AudioManager.js';
 import { SaveManager } from './SaveManager.js';
 import { UIRenderer } from './UIRenderer.js';
+import { LanguageManager } from './LanguageManager.js';
 
 export class Game {
   private script: GameScript;
@@ -10,6 +11,7 @@ export class Game {
   private audioManager: AudioManager;
   private saveManager: SaveManager;
   private uiRenderer: UIRenderer;
+  private languageManager: LanguageManager;
   private eventHandlers: { [key: string]: GameEventHandler[] } = {};
   private currentSceneDialogueHistory: DialogueEntry[] = []; // Lưu trữ lịch sử dialogue của scene hiện tại
   private globalDialogueHistory: Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> = []; // Lưu trữ toàn bộ lịch sử dialogue
@@ -25,6 +27,7 @@ export class Game {
     this.audioManager = new AudioManager();
     this.saveManager = new SaveManager();
     this.uiRenderer = new UIRenderer(this);
+    this.languageManager = new LanguageManager();
   }
 
   // Mount game to DOM element
@@ -38,6 +41,9 @@ export class Game {
   }
 
   private initialize(): void {
+    // Initialize language manager
+    this.languageManager.initialize(this.script);
+    
     // Setup container
     this.container.innerHTML = '';
     this.container.style.position = 'relative';
@@ -245,6 +251,28 @@ export class Game {
 
   getScript(): GameScript {
     return this.script;
+  }
+
+  // Language Manager access methods
+  getLanguageManager(): LanguageManager {
+    return this.languageManager;
+  }
+
+  getCurrentLanguage(): string {
+    return this.languageManager.getCurrentLanguage();
+  }
+
+  setLanguage(languageCode: string): void {
+    this.languageManager.setLanguage(languageCode);
+    // Note: UI refresh will be handled by individual UI components
+  }
+
+  getAvailableLanguages() {
+    return this.languageManager.getAvailableLanguages();
+  }
+
+  getText(key: string, fallback?: string): string {
+    return this.languageManager.getText(key, fallback);
   }
 
   getAudioManager(): AudioManager {

@@ -211,6 +211,7 @@ export class UIRenderer {
     this.mainMenuContainer.innerHTML = '';
     
     const config = this.game.getScript().settings?.mainMenu || {};
+    const langManager = this.game.getLanguageManager();
     
     // Background setup
     let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
@@ -282,7 +283,7 @@ export class UIRenderer {
     // Title
     const titleConfig = config.title || {};
     const titleDiv = document.createElement('div');
-    const titleText = titleConfig.text || this.game.getScript().title;
+    const titleText = langManager.getLocalizedText(titleConfig.text || this.game.getScript().title || 'Visual Novel');
     const titleColor = titleConfig.color || '#ffffff';
     const titleSize = titleConfig.fontSize || 48;
     const titleFont = titleConfig.fontFamily || 'Arial, sans-serif';
@@ -327,8 +328,7 @@ export class UIRenderer {
     const subtitleConfig = config.subtitle || {};
     if (subtitleConfig.show !== false) {
       const subtitleDiv = document.createElement('div');
-      const subtitleText = subtitleConfig.text || 
-        `Phiên bản ${this.game.getScript().version || '1.0.0'} - Tác giả: ${this.game.getScript().author || 'Unknown'}`;
+      const subtitleText = langManager.getLocalizedText(subtitleConfig.text || '') || langManager.getSubtitleText();
       
       subtitleDiv.style.cssText = `
         font-size: ${subtitleConfig.fontSize || 16}px;
@@ -355,12 +355,12 @@ export class UIRenderer {
     
     // Menu buttons
     const menuButtons = [
-      { text: 'START', action: () => this.game.startNewGame(), icon: '' },
-      { text: 'CONTINUE', action: () => this.game.continueGame(), icon: '' },
-      { text: 'LOAD', action: () => this.game.loadGame(), icon: '' },
-      { text: 'SYSTEM', action: () => this.showSettings(buttonsContainer), icon: '' },
-      { text: 'CREDIT', action: () => this.showCredits(), icon: '' },
-      { text: 'EXIT', action: () => window.close(), icon: '' }
+      { text: langManager.getText('menu.start'), action: () => this.game.startNewGame(), icon: '' },
+      { text: langManager.getText('menu.continue'), action: () => this.game.continueGame(), icon: '' },
+      { text: langManager.getText('menu.load'), action: () => this.game.loadGame(), icon: '' },
+      { text: langManager.getText('menu.settings'), action: () => this.showSettings(buttonsContainer), icon: '' },
+      { text: langManager.getText('menu.credits'), action: () => this.showCredits(), icon: '' },
+      { text: langManager.getText('menu.exit'), action: () => window.close(), icon: '' }
     ];
     
     menuButtons.forEach(button => {
@@ -489,12 +489,13 @@ export class UIRenderer {
   }
 
   private createControlButtons(): void {
+    const langManager = this.game.getLanguageManager();
     const controls = [
-      { key: 'Enter', action: 'Tiếp tục', onClick: () => this.handleNext() },
-      { key: '←', action: 'Quay lại', onClick: () => this.game.back() },
-      { key: 'S', action: 'Lưu', onClick: () => this.game.saveGame() },
-      { key: 'L', action: 'Tải', onClick: () => this.game.loadGame() },
-      { key: 'H', action: 'Lịch sử', onClick: () => this.toggleLog() }
+      { key: 'Enter', action: langManager.getText('ui.next'), onClick: () => this.handleNext() },
+      { key: '←', action: langManager.getText('ui.back'), onClick: () => this.game.back() },
+      { key: 'S', action: langManager.getText('ui.save'), onClick: () => this.game.saveGame() },
+      { key: 'L', action: langManager.getText('ui.load'), onClick: () => this.game.loadGame() },
+      { key: 'H', action: langManager.getText('ui.history'), onClick: () => this.toggleLog() }
     ];
 
     controls.forEach(control => {
@@ -546,10 +547,8 @@ export class UIRenderer {
 
   private handleNext(): void {
     if (this.isTyping) {
-      console.log('yes');
       this.skipTyping();
     } else if (!this.justSkippedTyping) {
-      console.log('no');
       this.game.next();
     }
   }
@@ -590,11 +589,12 @@ export class UIRenderer {
   }
 
   private showLog(): void {
+    const langManager = this.game.getLanguageManager();
     const globalHistory = this.game.getGlobalDialogueHistory();
-    let logHtml = '<div style="font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">Lịch sử hội thoại toàn bộ</div>';
+    let logHtml = `<div style="font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">${langManager.getText('history.title')}</div>`;
     
     if (globalHistory.length === 0) {
-      logHtml += '<div style="text-align: center; color: #ccc; margin: 50px 0;">Chưa có lịch sử hội thoại</div>';
+      logHtml += `<div style="text-align: center; color: #ccc; margin: 50px 0;">${langManager.getText('history.empty')}</div>`;
     } else {
       globalHistory.forEach((entry, index) => {
         const { dialogue, sceneId } = entry;
@@ -621,7 +621,8 @@ export class UIRenderer {
           logHtml += `<div style="color: ${character.color || '#fff'}; font-weight: bold; margin-bottom: 4px; font-size: 13px;">${character.name}</div>`;
         }
         
-        logHtml += `<div style="line-height: 1.4; font-size: 14px;">${dialogue.text}</div>`;
+        const dialogueText = langManager.getLocalizedText(dialogue.text);
+        logHtml += `<div style="line-height: 1.4; font-size: 14px;">${dialogueText}</div>`;
         logHtml += `</div>`;
       });
     }
@@ -644,7 +645,7 @@ export class UIRenderer {
         font-size: 16px;
         box-shadow: 0 2px 8px rgba(0,123,255,0.3);
         transition: all 0.2s ease;
-      " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">Đóng (H)</button>
+      " onmouseover="this.style.background='#0056b3'; this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#007bff'; this.style.transform='translateY(0)'">${langManager.getText('ui.close')} (H)</button>
     `;
     
     const button = closeButton.querySelector('button');
@@ -685,7 +686,9 @@ export class UIRenderer {
     
     this.stopTyping();
     
-    this.currentDialogueText = dialogue.text;
+    const localizedText = this.game.getLanguageManager().getLocalizedText(dialogue.text);
+    
+    this.currentDialogueText = localizedText;
     this.currentCharacterName = character ? character.name : '';
     this.currentCharacterColor = character ? character.color || '#fff' : '#fff';
     
@@ -750,7 +753,6 @@ export class UIRenderer {
 
   private skipTyping(): void {
     if (this.isTyping) {
-      console.log('called');
       this.stopTyping();
       this.isTyping = false;
       this.justSkippedTyping = true;
@@ -771,11 +773,13 @@ export class UIRenderer {
 
   // Show choices
   showChoices(choices: Choice[]): void {
+    const langManager = this.game.getLanguageManager();
     this.dialogueContainer.style.display = 'none';
     this.choicesContainer.style.display = 'block';
     
     let html = '';
     choices.forEach((choice, index) => {
+      const choiceText = langManager.getLocalizedText(choice.text);
       html += `
         <button 
           class="choice-button" 
@@ -795,7 +799,7 @@ export class UIRenderer {
           onmouseover="this.style.background='rgba(255,255,255,1)'"
           onmouseout="this.style.background='rgba(255,255,255,0.9)'"
         >
-          ${choice.text}
+          ${choiceText}
         </button>
       `;
     });
@@ -886,6 +890,7 @@ export class UIRenderer {
   }
 
   private showMenu(): void {
+    const langManager = this.game.getLanguageManager();
     const menuOverlay = document.createElement('div');
     menuOverlay.style.cssText = `
       position: absolute;
@@ -910,10 +915,10 @@ export class UIRenderer {
     `;
 
     const menuButtons = [
-      { text: 'Tiếp tục', action: () => this.closeMenu(menuOverlay) },
-      { text: 'Lưu game', action: () => { this.game.saveGame(); this.closeMenu(menuOverlay); } },
-      { text: 'Tải game', action: () => { this.game.loadGame(); this.closeMenu(menuOverlay); } },
-      { text: 'Cài đặt', action: () => this.showSettings(menuOverlay) }
+      { text: langManager.getText('ui.next'), action: () => this.closeMenu(menuOverlay) },
+      { text: langManager.getText('menu.save'), action: () => { this.game.saveGame(); this.closeMenu(menuOverlay); } },
+      { text: langManager.getText('menu.load'), action: () => { this.game.loadGame(); this.closeMenu(menuOverlay); } },
+      { text: langManager.getText('menu.settings'), action: () => this.showSettings(menuOverlay) }
     ];
 
     menuButtons.forEach(button => {
@@ -944,7 +949,134 @@ export class UIRenderer {
   }
 
   private showSettings(menuOverlay: HTMLElement): void {
-    console.log('Settings menu would be shown here');
-    this.closeMenu(menuOverlay);
+    const langManager = this.game.getLanguageManager();
+    
+    const settingsModal = document.createElement('div');
+    settingsModal.style.cssText = `
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      min-width: 400px;
+      max-width: 500px;
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = langManager.getText('menu.settings');
+    title.style.cssText = `
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #333;
+    `;
+    settingsModal.appendChild(title);
+
+    const languageSection = document.createElement('div');
+    languageSection.style.cssText = `
+      margin-bottom: 20px;
+      text-align: left;
+    `;
+
+    const languageLabel = document.createElement('label');
+    languageLabel.textContent = langManager.getText('settings.language') + ':';
+    languageLabel.style.cssText = `
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    `;
+    languageSection.appendChild(languageLabel);
+
+    const languageSelect = document.createElement('select');
+    languageSelect.style.cssText = `
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    `;
+
+    const availableLanguages = this.game.getAvailableLanguages();
+    const currentLanguage = this.game.getCurrentLanguage();
+
+    availableLanguages.forEach(lang => {
+      const option = document.createElement('option');
+      option.value = lang.code;
+      option.textContent = lang.name;
+      if (lang.code === currentLanguage) {
+        option.selected = true;
+      }
+      languageSelect.appendChild(option);
+    });
+
+    languageSelect.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      this.game.setLanguage(target.value);
+      this.closeMenu(menuOverlay);
+      setTimeout(() => this.showSettings(menuOverlay), 100);
+    });
+
+    languageSection.appendChild(languageSelect);
+    settingsModal.appendChild(languageSection);
+
+    const textSpeedSection = document.createElement('div');
+    textSpeedSection.style.cssText = `
+      margin-bottom: 20px;
+      text-align: left;
+    `;
+
+    const textSpeedLabel = document.createElement('label');
+    textSpeedLabel.textContent = langManager.getText('settings.textSpeed') + ':';
+    textSpeedLabel.style.cssText = `
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #333;
+    `;
+    textSpeedSection.appendChild(textSpeedLabel);
+
+    const textSpeedSlider = document.createElement('input');
+    textSpeedSlider.type = 'range';
+    textSpeedSlider.min = '10';
+    textSpeedSlider.max = '100';
+    textSpeedSlider.value = this.typewriterSpeed.toString();
+    textSpeedSlider.style.cssText = `
+      width: 100%;
+      margin-bottom: 5px;
+    `;
+
+    const textSpeedValue = document.createElement('span');
+    textSpeedValue.textContent = this.typewriterSpeed + 'ms';
+    textSpeedValue.style.cssText = `
+      font-size: 12px;
+      color: #666;
+    `;
+
+    textSpeedSlider.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      this.typewriterSpeed = parseInt(target.value);
+      textSpeedValue.textContent = target.value + 'ms';
+    });
+
+    textSpeedSection.appendChild(textSpeedSlider);
+    textSpeedSection.appendChild(textSpeedValue);
+    settingsModal.appendChild(textSpeedSection);
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = langManager.getText('ui.close');
+    closeButton.style.cssText = `
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    `;
+    closeButton.onclick = () => this.closeMenu(menuOverlay);
+    settingsModal.appendChild(closeButton);
+
+    menuOverlay.innerHTML = '';
+    menuOverlay.appendChild(settingsModal);
   }
 } 
