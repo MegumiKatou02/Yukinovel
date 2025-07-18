@@ -9,6 +9,7 @@ export class UIRenderer {
   private dialogueContainer!: HTMLElement;
   private choicesContainer!: HTMLElement;
   private uiContainer!: HTMLElement;
+  private originalCharacterSprites: { [characterName: string]: string | null | undefined } = {}; // Lưu trữ sprite gốc
 
   constructor(game: Game) {
     this.game = game;
@@ -114,12 +115,10 @@ export class UIRenderer {
   }
 
   private attachEventListeners(): void {
-    // Click to advance dialogue
     this.dialogueContainer.addEventListener('click', () => {
       this.game.next();
     });
 
-    // Keyboard controls
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
@@ -130,16 +129,21 @@ export class UIRenderer {
 
   // Update scene
   updateScene(scene: Scene): void {
-    // Update background
     if (scene.background) {
       this.backgroundElement.style.backgroundImage = `url(${scene.background})`;
     }
 
-    // Update characters
     this.updateCharacters(scene.characters || []);
+    
+    if (scene.characters) {
+      scene.characters.forEach(character => {
+        // if (character.image) {
+          this.originalCharacterSprites[character.name] = character.image;
+        // }
+      });
+    }
   }
 
-  // Update dialogue
   updateDialogue(dialogue: DialogueEntry): void {
     const characterName = dialogue.character;
     const character = characterName ? this.game.getScript().characters[characterName] : null;
@@ -158,10 +162,21 @@ export class UIRenderer {
     // Hide choices when showing dialogue **check :v
     this.choicesContainer.style.display = 'none';
 
-    // Update character emotions
     if (character && dialogue.emotion && character.emotions) {
       this.updateCharacterEmotion(characterName!, dialogue.emotion);
     }
+
+    if (character && dialogue.sprite) {
+      this.updateCharacterSprite(characterName!, dialogue.sprite);
+    }
+
+    if (dialogue.characterSprite) {
+      Object.keys(dialogue.characterSprite).forEach(charName => {
+        this.updateCharacterSprite(charName, dialogue.characterSprite![charName]);
+      });
+    }
+
+    this.restoreUnspecifiedCharacterSprites(dialogue);
   }
 
   // Show choices
@@ -210,7 +225,7 @@ export class UIRenderer {
     this.characterContainer.innerHTML = '';
     
     characters.forEach((character, index) => {
-      if (character.image) {
+      // if (character.image) {
         const charElement = document.createElement('div');
         
         const position = character.position || {};
@@ -239,11 +254,10 @@ export class UIRenderer {
         `;
         charElement.id = `character-${character.name}`;
         this.characterContainer.appendChild(charElement);
-      }
+      // }
     });
   }
 
-  // Update character emotion
   private updateCharacterEmotion(characterName: string, emotion: string): void {
     const character = this.game.getScript().characters[characterName];
     if (character && character.emotions && character.emotions[emotion]) {
@@ -254,7 +268,36 @@ export class UIRenderer {
     }
   }
 
-  // Show menu
+  private updateCharacterSprite(characterName: string, sprite: string | null): void {
+    const charElement = document.getElementById(`character-${characterName}`);
+    if (charElement) {
+      charElement.style.backgroundImage = `url(${sprite})`;
+    }
+  }
+
+  private restoreUnspecifiedCharacterSprites(dialogue: DialogueEntry): void {
+    const specifiedCharacters = new Set<string>();
+    
+    if (dialogue.character && dialogue.sprite) {
+      specifiedCharacters.add(dialogue.character);
+    }
+    
+    if (dialogue.characterSprite) {
+      Object.keys(dialogue.characterSprite).forEach(charName => {
+        specifiedCharacters.add(charName);
+      });
+    }
+    
+    Object.keys(this.originalCharacterSprites).forEach(charName => {
+      if (!specifiedCharacters.has(charName)) {
+        const charElement = document.getElementById(`character-${charName}`);
+        if (charElement) {
+          charElement.style.backgroundImage = `url(${this.originalCharacterSprites[charName]})`;
+        }
+      }
+    });
+  }
+
   private showMenu(): void {
     const menuOverlay = document.createElement('div');
     menuOverlay.style.cssText = `

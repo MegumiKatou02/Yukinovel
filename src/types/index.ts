@@ -1,7 +1,7 @@
 // Character types
 export interface Character {
   name: string;
-  image?: string;
+  image?: string | null;
   color?: string;
   emotions?: { [key: string]: string };
   position?: {
@@ -27,6 +27,8 @@ export interface DialogueEntry {
   character?: string;
   text: string;
   emotion?: string;
+  sprite?: string;
+  characterSprite?: { [characterName: string]: string | null };
   choices?: Choice[];
   action?: 'jump' | 'end' | 'save' | 'load';
   target?: string;
