@@ -15,6 +15,15 @@ export class UIRenderer {
   private isLogVisible: boolean = false;
   private mainMenuContainer!: HTMLElement;
   private gameContainer!: HTMLElement;
+  
+  // Typewriter effect properties
+  private isTyping: boolean = false;
+  private currentTypewriterTimeout: number | null = null;
+  private typewriterSpeed: number = 30; // milliseconds per character
+  private currentDialogueText: string = '';
+  private currentCharacterName: string = '';
+  private currentCharacterColor: string = '#fff';
+  private justSkippedTyping: boolean = false;
 
   constructor(game: Game) {
     this.game = game;
@@ -350,7 +359,7 @@ export class UIRenderer {
       { text: 'CONTINUE', action: () => this.game.continueGame(), icon: '' },
       { text: 'LOAD', action: () => this.game.loadGame(), icon: '' },
       { text: 'SYSTEM', action: () => this.showSettings(buttonsContainer), icon: '' },
-      { text: 'EXTRA', action: () => this.showCredits(), icon: '' },
+      { text: 'CREDIT', action: () => this.showCredits(), icon: '' },
       { text: 'EXIT', action: () => window.close(), icon: '' }
     ];
     
@@ -481,7 +490,7 @@ export class UIRenderer {
 
   private createControlButtons(): void {
     const controls = [
-      { key: 'Enter', action: 'Tiếp tục', onClick: () => this.game.next() },
+      { key: 'Enter', action: 'Tiếp tục', onClick: () => this.handleNext() },
       { key: '←', action: 'Quay lại', onClick: () => this.game.back() },
       { key: 'S', action: 'Lưu', onClick: () => this.game.saveGame() },
       { key: 'L', action: 'Tải', onClick: () => this.game.loadGame() },
@@ -535,15 +544,25 @@ export class UIRenderer {
     });
   }
 
+  private handleNext(): void {
+    if (this.isTyping) {
+      console.log('yes');
+      this.skipTyping();
+    } else if (!this.justSkippedTyping) {
+      console.log('no');
+      this.game.next();
+    }
+  }
+
   private attachEventListeners(): void {
     this.dialogueContainer.addEventListener('click', () => {
-      this.game.next();
+      this.handleNext();
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
-        this.game.next();
+        this.handleNext();
       } else if (e.code === 'Backspace') {
         e.preventDefault();
         this.game.back();
@@ -664,16 +683,13 @@ export class UIRenderer {
     const characterName = dialogue.character;
     const character = characterName ? this.game.getScript().characters[characterName] : null;
     
-    let html = '';
+    this.stopTyping();
     
-    if (character) {
-      html += `<div style="color: ${character.color || '#fff'}; font-weight: bold; margin-bottom: 10px;">${character.name}</div>`;
-    }
+    this.currentDialogueText = dialogue.text;
+    this.currentCharacterName = character ? character.name : '';
+    this.currentCharacterColor = character ? character.color || '#fff' : '#fff';
     
-    html += `<div style="font-size: 18px; line-height: 1.4;">${dialogue.text}</div>`;
-    
-    this.dialogueContainer.innerHTML = html;
-    this.dialogueContainer.style.display = 'block';
+    this.startTypewriter();
     
     this.choicesContainer.style.display = 'none';
 
@@ -692,6 +708,65 @@ export class UIRenderer {
     }
 
     this.restoreUnspecifiedCharacterSprites(dialogue);
+  }
+
+  // Typewriter effect methods
+  private startTypewriter(): void {
+    this.isTyping = true;
+    this.justSkippedTyping = false;
+    this.dialogueContainer.style.display = 'block';
+    this.typeText('', 0);
+  }
+
+  private typeText(currentText: string, index: number): void {
+    if (index >= this.currentDialogueText.length) {
+      this.isTyping = false;
+      return;
+    }
+
+    const nextChar = this.currentDialogueText[index];
+    const newText = currentText + nextChar;
+    
+    let html = '';
+    if (this.currentCharacterName) {
+      html += `<div style="color: ${this.currentCharacterColor}; font-weight: bold; margin-bottom: 10px;">${this.currentCharacterName}</div>`;
+    }
+    html += `<div style="font-size: 18px; line-height: 1.4;">${newText}</div>`;
+    
+    this.dialogueContainer.innerHTML = html;
+    
+    // đệ quy
+    this.currentTypewriterTimeout = window.setTimeout(() => {
+      this.typeText(newText, index + 1);
+    }, this.typewriterSpeed);
+  }
+
+  private stopTyping(): void {
+    if (this.currentTypewriterTimeout) {
+      clearTimeout(this.currentTypewriterTimeout);
+      this.currentTypewriterTimeout = null;
+    }
+  }
+
+  private skipTyping(): void {
+    if (this.isTyping) {
+      console.log('called');
+      this.stopTyping();
+      this.isTyping = false;
+      this.justSkippedTyping = true;
+      
+      let html = '';
+      if (this.currentCharacterName) {
+        html += `<div style="color: ${this.currentCharacterColor}; font-weight: bold; margin-bottom: 10px;">${this.currentCharacterName}</div>`;
+      }
+      html += `<div style="font-size: 18px; line-height: 1.4;">${this.currentDialogueText}</div>`;
+      
+      this.dialogueContainer.innerHTML = html;
+      
+      setTimeout(() => {
+        this.justSkippedTyping = false;
+      }, 100);
+    }
   }
 
   // Show choices

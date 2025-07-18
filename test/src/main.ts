@@ -589,17 +589,21 @@ game.on('end', (_event) => {
 
 game.mount('#game-container');
 
-document.addEventListener('keydown', (e) => {
-    switch(e.key) {
-        case 'Enter':
-        case ' ':
-            game.next();
-            break;
-        case 's':
-            game.saveGame();
-            break;
-        case 'l':
-            game.loadGame();
-            break;
-    }
-});
+
+/**
+ * Đã được xử lí bên phần UIRenderer
+ */
+// document.addEventListener('keydown', (e) => {
+//     switch(e.key) {
+//         case 'Enter':
+//         case ' ':
+//             game.next();
+//             break;
+//         case 's':
+//             game.saveGame();
+//             break;
+//         case 'l':
+//             game.loadGame();
+//             break;
+//     }
+// });
