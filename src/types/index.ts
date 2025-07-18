@@ -53,12 +53,55 @@ export interface GameScript {
 
 // Game settings
 export interface GameSettings {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   textSpeed?: number;
   autoPlay?: boolean;
   theme?: 'light' | 'dark';
   language?: string;
+  mainMenu?: MainMenuConfig;
+}
+
+// Main Menu Configuration
+export interface MainMenuConfig {
+  background?: string;
+  backgroundVideo?: string;
+  backgroundColor?: string;
+  backgroundOverlay?: string;
+  music?: string;
+  title?: {
+    text?: string;
+    color?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    shadow?: boolean;
+    gradient?: string;
+    animation?: 'none' | 'fade' | 'slide' | 'glow';
+  };
+  subtitle?: {
+    show?: boolean;
+    text?: string;
+    color?: string;
+    fontSize?: number;
+  };
+  buttons?: {
+    style?: 'modern' | 'classic' | 'minimal' | 'glass';
+    color?: string;
+    hoverColor?: string; 
+    textColor?: string;
+    fontSize?: number; 
+    borderRadius?: number;
+    spacing?: number;
+    width?: number;
+    animation?: 'none' | 'bounce' | 'slide' | 'fade';
+  };
+  layout?: {
+    alignment?: 'left' | 'center' | 'right';
+    titlePosition?: 'top' | 'center' | 'bottom';
+    buttonsPosition?: 'top' | 'center' | 'bottom';
+    padding?: number;
+  };
+  customCSS?: string;
 }
 
 // Game state

@@ -41,8 +41,8 @@ export class Game {
     // Setup container
     this.container.innerHTML = '';
     this.container.style.position = 'relative';
-    this.container.style.width = `${this.script.settings?.width || 800}px`;
-    this.container.style.height = `${this.script.settings?.height || 600}px`;
+    this.container.style.width = typeof this.script.settings?.width === 'string' ? this.script.settings.width : `${this.script.settings?.width || 800}px`;
+    this.container.style.height = typeof this.script.settings?.height === 'string' ? this.script.settings.height : `${this.script.settings?.height || 600}px`;
     this.container.style.overflow = 'hidden';
     this.container.style.backgroundColor = '#000';
     this.container.style.fontFamily = 'Arial, sans-serif';
@@ -50,8 +50,12 @@ export class Game {
     // Render initial UI
     this.uiRenderer.render(this.container);
     
-    // Start first scene
-    this.startScene(this.state.currentScene);
+    // Show main menu if configured, otherwise start game directly
+    if (this.script.settings?.mainMenu) {
+      this.showMainMenu();
+    } else {
+      this.startScene(this.state.currentScene);
+    }
   }
 
   // Scene management
@@ -184,6 +188,24 @@ export class Game {
       this.startScene(this.state.currentScene);
       this.emit('load', { slot });
     }
+  }
+
+  // Main menu methods
+  showMainMenu(): void {
+    this.uiRenderer.showMainMenu();
+  }
+
+  startNewGame(): void {
+    this.globalDialogueHistory = [];
+    this.state.currentDialogue = 0;
+    this.state.currentScene = this.script.scenes[0]?.id || '';
+    this.uiRenderer.hideMainMenu();
+    this.startScene(this.state.currentScene);
+  }
+
+  continueGame(): void {
+    this.uiRenderer.hideMainMenu();
+    this.startScene(this.state.currentScene);
   }
 
   // Event system

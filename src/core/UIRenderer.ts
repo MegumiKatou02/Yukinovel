@@ -1,4 +1,4 @@
-import { Scene, DialogueEntry, Choice, Character } from '../types/index.js';
+import { Scene, DialogueEntry, Choice, Character, MainMenuConfig } from '../types/index.js';
 import { Game } from './Game.js';
 
 export class UIRenderer {
@@ -13,6 +13,8 @@ export class UIRenderer {
   private controlsContainer!: HTMLElement;
   private logContainer!: HTMLElement;
   private isLogVisible: boolean = false;
+  private mainMenuContainer!: HTMLElement;
+  private gameContainer!: HTMLElement;
 
   constructor(game: Game) {
     this.game = game;
@@ -26,6 +28,30 @@ export class UIRenderer {
   }
 
   private createUIStructure(): void {
+    // Main Menu container
+    this.mainMenuContainer = document.createElement('div');
+    this.mainMenuContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      pointer-events: auto;
+    `;
+    this.container.appendChild(this.mainMenuContainer);
+
+    // Game container
+    this.gameContainer = document.createElement('div');
+    this.gameContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    `;
+    this.container.appendChild(this.gameContainer);
+
     // Background layer
     this.backgroundElement = document.createElement('div');
     this.backgroundElement.style.cssText = `
@@ -39,7 +65,7 @@ export class UIRenderer {
       background-repeat: no-repeat;
       transition: opacity 0.5s ease;
     `;
-    this.container.appendChild(this.backgroundElement);
+    this.gameContainer.appendChild(this.backgroundElement);
 
     // Character layer
     this.characterContainer = document.createElement('div');
@@ -51,7 +77,7 @@ export class UIRenderer {
       height: 100%;
       pointer-events: none;
     `;
-    this.container.appendChild(this.characterContainer);
+    this.gameContainer.appendChild(this.characterContainer);
 
     // UI layer
     this.uiContainer = document.createElement('div');
@@ -63,7 +89,7 @@ export class UIRenderer {
       height: 100%;
       pointer-events: none;
     `;
-    this.container.appendChild(this.uiContainer);
+    this.gameContainer.appendChild(this.uiContainer);
 
     // Dialogue container
     this.dialogueContainer = document.createElement('div');
@@ -97,6 +123,7 @@ export class UIRenderer {
     `;
     this.uiContainer.appendChild(this.choicesContainer);
 
+    // Controls container
     this.controlsContainer = document.createElement('div');
     this.controlsContainer.style.cssText = `
       position: absolute;
@@ -121,6 +148,7 @@ export class UIRenderer {
 
     this.createControlButtons();
 
+    // Log container
     this.logContainer = document.createElement('div');
     this.logContainer.style.cssText = `
       position: absolute;
@@ -156,6 +184,299 @@ export class UIRenderer {
     `;
     menuButton.onclick = () => this.showMenu();
     this.uiContainer.appendChild(menuButton);
+  }
+
+  // Main Menu methods
+  showMainMenu(): void {
+    this.createMainMenu();
+    this.mainMenuContainer.style.display = 'block';
+    this.gameContainer.style.display = 'none';
+  }
+
+  hideMainMenu(): void {
+    this.mainMenuContainer.style.display = 'none';
+    this.gameContainer.style.display = 'block';
+  }
+
+  private createMainMenu(): void {
+    this.mainMenuContainer.innerHTML = '';
+    
+    const config = this.game.getScript().settings?.mainMenu || {};
+    
+    // Background setup
+    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+    
+    if (config.backgroundColor) {
+      backgroundStyle = `background: ${config.backgroundColor};`;
+    }
+    
+    if (config.background) {
+      backgroundStyle = `
+        background-image: url('${config.background}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      `;
+    }
+    
+    if (config.backgroundOverlay) {
+      backgroundStyle += `
+        position: relative;
+      `;
+    }
+    
+    this.mainMenuContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      ${backgroundStyle}
+      display: flex;
+      pointer-events: auto;
+    `;
+    
+    // Overlay
+    if (config.backgroundOverlay) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: ${config.backgroundOverlay};
+        z-index: 1;
+      `;
+      this.mainMenuContainer.appendChild(overlay);
+    }
+    
+    // Main content container
+    const contentContainer = document.createElement('div');
+    const layout = config.layout || {};
+    const alignment = layout.alignment || 'center';
+    const padding = layout.padding || 50;
+    
+    contentContainer.style.cssText = `
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: ${layout.titlePosition === 'top' ? 'flex-start' : layout.titlePosition === 'bottom' ? 'flex-end' : 'center'};
+      align-items: ${alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center'};
+      padding: ${padding}px;
+      box-sizing: border-box;
+    `;
+    
+    // Title
+    const titleConfig = config.title || {};
+    const titleDiv = document.createElement('div');
+    const titleText = titleConfig.text || this.game.getScript().title;
+    const titleColor = titleConfig.color || '#ffffff';
+    const titleSize = titleConfig.fontSize || 48;
+    const titleFont = titleConfig.fontFamily || 'Arial, sans-serif';
+    
+    let titleStyle = `
+      font-size: ${titleSize}px;
+      font-weight: bold;
+      color: ${titleColor};
+      font-family: ${titleFont};
+      margin-bottom: 20px;
+      text-align: ${alignment};
+    `;
+    
+    if (titleConfig.shadow) {
+      titleStyle += 'text-shadow: 2px 2px 4px rgba(0,0,0,0.5);';
+    }
+    
+    if (titleConfig.gradient) {
+      titleStyle += `
+        background: ${titleConfig.gradient};
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      `;
+    }
+    
+    titleDiv.style.cssText = titleStyle;
+    titleDiv.textContent = titleText;
+    
+    // Animation
+    if (titleConfig.animation === 'fade') {
+      titleDiv.style.animation = 'fadeIn 2s ease-in-out';
+    } else if (titleConfig.animation === 'slide') {
+      titleDiv.style.animation = 'slideIn 1s ease-out';
+    } else if (titleConfig.animation === 'glow') {
+      titleDiv.style.animation = 'glow 2s ease-in-out infinite alternate';
+    }
+    
+    contentContainer.appendChild(titleDiv);
+    
+    // Subtitle
+    const subtitleConfig = config.subtitle || {};
+    if (subtitleConfig.show !== false) {
+      const subtitleDiv = document.createElement('div');
+      const subtitleText = subtitleConfig.text || 
+        `Phiên bản ${this.game.getScript().version || '1.0.0'} - Tác giả: ${this.game.getScript().author || 'Unknown'}`;
+      
+      subtitleDiv.style.cssText = `
+        font-size: ${subtitleConfig.fontSize || 16}px;
+        color: ${subtitleConfig.color || '#cccccc'};
+        margin-bottom: 50px;
+        text-align: ${alignment};
+      `;
+      subtitleDiv.textContent = subtitleText;
+      contentContainer.appendChild(subtitleDiv);
+    }
+    
+    // Buttons container
+    const buttonsContainer = document.createElement('div');
+    const buttonConfig = config.buttons || {};
+    const buttonSpacing = buttonConfig.spacing || 15;
+    const buttonWidth = buttonConfig.width || 300;
+    
+    buttonsContainer.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: ${buttonSpacing}px;
+      width: ${buttonWidth}px;
+    `;
+    
+    // Menu buttons
+    const menuButtons = [
+      { text: 'START', action: () => this.game.startNewGame(), icon: '' },
+      { text: 'CONTINUE', action: () => this.game.continueGame(), icon: '' },
+      { text: 'LOAD', action: () => this.game.loadGame(), icon: '' },
+      { text: 'SYSTEM', action: () => this.showSettings(buttonsContainer), icon: '' },
+      { text: 'EXTRA', action: () => this.showCredits(), icon: '' },
+      { text: 'EXIT', action: () => window.close(), icon: '' }
+    ];
+    
+    menuButtons.forEach(button => {
+      const buttonEl = this.createMenuButton(button.text, button.action, button.icon, config);
+      buttonsContainer.appendChild(buttonEl);
+    });
+    
+    contentContainer.appendChild(buttonsContainer);
+    this.mainMenuContainer.appendChild(contentContainer);
+    
+    this.addMainMenuAnimations();
+  }
+  
+  private createMenuButton(text: string, action: () => void, icon: string, config: MainMenuConfig): HTMLElement {
+    const buttonConfig = config.buttons || {};
+    const button = document.createElement('button');
+    
+    const style = buttonConfig.style || 'modern';
+    const color = buttonConfig.color || '#4A90E2';
+    const hoverColor = buttonConfig.hoverColor || '#357ABD';
+    const textColor = buttonConfig.textColor || '#ffffff';
+    const fontSize = buttonConfig.fontSize || 18;
+    const borderRadius = buttonConfig.borderRadius || 8;
+    
+    let buttonStyle = `
+      background: ${color};
+      color: ${textColor};
+      border: none;
+      padding: 15px 30px;
+      font-size: ${fontSize}px;
+      border-radius: ${borderRadius}px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    `;
+    
+    // Style variations
+    if (style === 'glass') {
+      buttonStyle += `
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+      `;
+    } else if (style === 'minimal') {
+      buttonStyle += `
+        background: transparent;
+        border: 2px solid ${color};
+        color: ${color};
+      `;
+    } else if (style === 'classic') {
+      buttonStyle += `
+        background: linear-gradient(45deg, ${color}, ${hoverColor});
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      `;
+    }
+    
+    button.style.cssText = buttonStyle;
+    button.innerHTML = `<span style="font-size: 20px;">${icon}</span><span>${text}</span>`;
+    
+    // Hover effects
+    button.onmouseover = () => {
+      if (style === 'minimal') {
+        button.style.background = color;
+        button.style.color = textColor;
+      } else {
+        button.style.background = hoverColor;
+      }
+      
+      if (buttonConfig.animation === 'bounce') {
+        button.style.transform = 'scale(1.05)';
+      } else if (buttonConfig.animation === 'slide') {
+        button.style.transform = 'translateX(10px)';
+      }
+    };
+    
+    button.onmouseout = () => {
+      if (style === 'minimal') {
+        button.style.background = 'transparent';
+        button.style.color = color;
+      } else {
+        button.style.background = color;
+      }
+      button.style.transform = 'none';
+    };
+    
+    button.onclick = action;
+    
+    return button;
+  }
+  
+  private addMainMenuAnimations(): void {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateY(-50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      
+      @keyframes glow {
+        from { text-shadow: 0 0 10px rgba(74,144,226,0.5); }
+        to { text-shadow: 0 0 20px rgba(74,144,226,1), 0 0 30px rgba(74,144,226,0.8); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // showSettings(): void {
+  //   // Implementation for settings modal
+  //   console.log('Settings modal');
+  // }
+
+  showCredits(): void {
+    // Implementation for credits modal
+    console.log('Credits modal');
   }
 
   private createControlButtons(): void {
