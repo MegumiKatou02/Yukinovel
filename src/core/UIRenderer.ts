@@ -179,25 +179,6 @@ export class UIRenderer {
       pointer-events: auto;
     `;
     this.uiContainer.appendChild(this.logContainer);
-
-    // Menu button
-    const menuButton = document.createElement('button');
-    menuButton.textContent = '☰';
-    menuButton.style.cssText = `
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      font-size: 18px;
-      cursor: pointer;
-      border-radius: 5px;
-      pointer-events: auto;
-    `;
-    menuButton.onclick = () => this.showMenu();
-    this.uiContainer.appendChild(menuButton);
   }
 
   // Main Menu methods
@@ -483,11 +464,6 @@ export class UIRenderer {
     document.head.appendChild(style);
   }
 
-  // showSettings(): void {
-  //   // Implementation for settings modal
-  //   console.log('Settings modal');
-  // }
-
   showCredits(): void {
     // Implementation for credits modal
     console.log('Credits modal');
@@ -497,7 +473,7 @@ export class UIRenderer {
     const langManager = this.game.getLanguageManager();
     const controls = [
       { key: 'Enter', action: langManager.getText('ui.next'), onClick: () => this.handleNext() },
-      { key: '←', action: langManager.getText('ui.back'), onClick: () => this.game.back() },
+      { key: 'Esc', action: langManager.getText('ui.home'), onClick: () => this.game.showMainMenu() },
       { key: 'S', action: langManager.getText('ui.save'), onClick: () => this.game.saveGame() },
       { key: 'L', action: langManager.getText('ui.load'), onClick: () => this.game.loadGame() },
       { key: 'H', action: langManager.getText('ui.history'), onClick: () => this.toggleLog() }
@@ -567,6 +543,8 @@ export class UIRenderer {
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         this.handleNext();
+      } else if (e.code === 'Escape') {
+        this.game.showMainMenu();
       } else if (e.code === 'Backspace') {
         e.preventDefault();
         this.game.back();
@@ -894,68 +872,6 @@ export class UIRenderer {
     });
   }
 
-  private showMenu(): void {
-    const langManager = this.game.getLanguageManager();
-    const menuOverlay = document.createElement('div');
-    menuOverlay.id = 'menu-overlay';
-    menuOverlay.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      pointer-events: auto;
-    `;
-
-    const menuContent = document.createElement('div');
-    menuContent.id = 'menu-content';
-    menuContent.style.cssText = `
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      min-width: 300px;
-    `;
-
-    const menuButtons = [
-      { text: langManager.getText('ui.next'), action: () => this.closeMenu(menuOverlay) },
-      { text: langManager.getText('menu.save'), action: () => { this.game.saveGame(); this.closeMenu(menuOverlay); } },
-      { text: langManager.getText('menu.load'), action: () => { this.game.loadGame(); this.closeMenu(menuOverlay); } },
-      { text: langManager.getText('menu.settings'), action: () => this.showSettings(menuOverlay) }
-    ];
-
-    menuButtons.forEach(button => {
-      const btn = document.createElement('button');
-      btn.className = 'menu-button';
-      btn.textContent = button.text;
-      btn.style.cssText = `
-        display: block;
-        width: 100%;
-        margin: 10px 0;
-        padding: 15px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-      `;
-      btn.onclick = button.action;
-      menuContent.appendChild(btn);
-    });
-
-    menuOverlay.appendChild(menuContent);
-    this.uiContainer.appendChild(menuOverlay);
-  }
-
-  private closeMenu(menuOverlay: HTMLElement): void {
-    menuOverlay.remove();
-  }
-
   private showSettings(menuOverlay: HTMLElement): void {
     const langManager = this.game.getLanguageManager();
     const config = this.game.getScript().settings?.mainMenu || {};
@@ -1100,8 +1016,6 @@ export class UIRenderer {
     languageSelect.addEventListener('change', (e) => {
       const target = e.target as HTMLSelectElement;
       this.game.setLanguage(target.value);
-      // menuOverlay.remove();
-      // this.showMenu();
     });
 
     languageSelect.addEventListener('focus', () => {
@@ -1242,7 +1156,7 @@ export class UIRenderer {
 
     const shortcuts = [
       { key: 'Space / Enter', action: langManager.getText('ui.next') },
-      { key: 'Backspace', action: langManager.getText('ui.back') },
+      { key: 'Esc', action: langManager.getText('ui.home') },
       { key: 'S', action: langManager.getText('ui.save') },
       { key: 'L', action: langManager.getText('ui.load') },
       { key: 'H', action: langManager.getText('ui.history') },

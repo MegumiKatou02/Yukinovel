@@ -78,6 +78,10 @@ export class LanguageManager {
         vi: 'Quay lại',
         en: 'Back'
       },
+      'ui.home': {
+        vi: 'Trang chủ',
+        en: 'Home'
+      },
       'ui.save': {
         vi: 'Lưu',
         en: 'Save'
