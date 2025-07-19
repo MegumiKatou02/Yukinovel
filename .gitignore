@@ -5,3 +5,4 @@ dist_test/
 *.png
 
 node_modules/
+examples/

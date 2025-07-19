@@ -32,6 +32,7 @@ export class UIRenderer {
   // Render initial UI structure
   render(container: HTMLElement): void {
     this.container = container;
+    this.container.id = 'container';
     this.createUIStructure();
     this.attachEventListeners();
   }
@@ -39,6 +40,7 @@ export class UIRenderer {
   private createUIStructure(): void {
     // Main Menu container
     this.mainMenuContainer = document.createElement('div');
+    this.mainMenuContainer.id = 'container-menu';
     this.mainMenuContainer.style.cssText = `
       position: absolute;
       top: 0;
@@ -52,6 +54,7 @@ export class UIRenderer {
 
     // Game container
     this.gameContainer = document.createElement('div');
+    this.gameContainer.id = 'container-game';
     this.gameContainer.style.cssText = `
       position: absolute;
       top: 0;
@@ -63,6 +66,7 @@ export class UIRenderer {
 
     // Background layer
     this.backgroundElement = document.createElement('div');
+    this.backgroundElement.id = 'background-game';
     this.backgroundElement.style.cssText = `
       position: absolute;
       top: 0;
@@ -78,6 +82,7 @@ export class UIRenderer {
 
     // Character layer
     this.characterContainer = document.createElement('div');
+    this.characterContainer.id = 'container-character';
     this.characterContainer.style.cssText = `
       position: absolute;
       top: 0;
@@ -892,6 +897,7 @@ export class UIRenderer {
   private showMenu(): void {
     const langManager = this.game.getLanguageManager();
     const menuOverlay = document.createElement('div');
+    menuOverlay.id = 'menu-overlay';
     menuOverlay.style.cssText = `
       position: absolute;
       top: 0;
@@ -906,6 +912,7 @@ export class UIRenderer {
     `;
 
     const menuContent = document.createElement('div');
+    menuContent.id = 'menu-content';
     menuContent.style.cssText = `
       background: white;
       padding: 30px;
@@ -923,6 +930,7 @@ export class UIRenderer {
 
     menuButtons.forEach(button => {
       const btn = document.createElement('button');
+      btn.className = 'menu-button';
       btn.textContent = button.text;
       btn.style.cssText = `
         display: block;
@@ -950,51 +958,128 @@ export class UIRenderer {
 
   private showSettings(menuOverlay: HTMLElement): void {
     const langManager = this.game.getLanguageManager();
+    const config = this.game.getScript().settings?.mainMenu || {};
     
-    const settingsModal = document.createElement('div');
-    settingsModal.style.cssText = `
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
+    const settingsContainer = document.createElement('div');
+    settingsContainer.id = 'settings-container';
+    
+    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+    
+    if (config.backgroundColor) {
+      backgroundStyle = `background: ${config.backgroundColor};`;
+    }
+    
+    if (config.background) {
+      backgroundStyle = `
+        background-image: url('${config.background}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      `;
+    }
+    
+    settingsContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      ${backgroundStyle}
+      color: white;
+      overflow-y: auto;
+      pointer-events: auto;
+      z-index: 1000;
+    `;
+
+    // Background overlay (same as main menu)
+    if (config.backgroundOverlay) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: ${config.backgroundOverlay};
+        z-index: 1;
+      `;
+      settingsContainer.appendChild(overlay);
+    }
+
+    // Main content container
+    const contentContainer = document.createElement('div');
+    contentContainer.style.cssText = `
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    `;
+
+    // Header section
+    const headerSection = document.createElement('div');
+    headerSection.style.cssText = `
       text-align: center;
-      min-width: 400px;
-      max-width: 500px;
+      margin-bottom: 60px;
     `;
 
-    const title = document.createElement('h2');
-    title.textContent = langManager.getText('menu.settings');
-    title.style.cssText = `
-      margin-top: 0;
-      margin-bottom: 20px;
-      color: #333;
-    `;
-    settingsModal.appendChild(title);
-
-    const languageSection = document.createElement('div');
-    languageSection.style.cssText = `
-      margin-bottom: 20px;
-      text-align: left;
-    `;
-
-    const languageLabel = document.createElement('label');
-    languageLabel.textContent = langManager.getText('settings.language') + ':';
-    languageLabel.style.cssText = `
-      display: block;
-      margin-bottom: 5px;
+    const settingsTitle = document.createElement('h1');
+    settingsTitle.textContent = langManager.getText('menu.settings');
+    settingsTitle.style.cssText = `
+      font-size: 42px;
       font-weight: bold;
-      color: #333;
+      margin: 0 0 15px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      color: white;
     `;
-    languageSection.appendChild(languageLabel);
+
+    const settingsSubtitle = document.createElement('p');
+    settingsSubtitle.textContent = langManager.getText('settings.subtitle', 'Tùy chỉnh trải nghiệm game của bạn');
+    settingsSubtitle.style.cssText = `
+      font-size: 16px;
+      margin: 0;
+      opacity: 0.9;
+      color: #f0f0f0;
+    `;
+
+    headerSection.appendChild(settingsTitle);
+    headerSection.appendChild(settingsSubtitle);
+    contentContainer.appendChild(headerSection);
+
+    // Settings sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      flex: 1;
+      margin-bottom: 40px;
+    `;
+
+    // Language Settings Section
+    const languageSection = this.createSimpleSettingsSection(
+      langManager.getText('settings.language'),
+      langManager.getText('settings.language.desc'),
+      'lang'
+    );
 
     const languageSelect = document.createElement('select');
     languageSelect.style.cssText = `
       width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
     `;
 
+    // Language options
     const availableLanguages = this.game.getAvailableLanguages();
     const currentLanguage = this.game.getCurrentLanguage();
 
@@ -1002,6 +1087,10 @@ export class UIRenderer {
       const option = document.createElement('option');
       option.value = lang.code;
       option.textContent = lang.name;
+      option.style.cssText = `
+        background: #333;
+        color: white;
+      `;
       if (lang.code === currentLanguage) {
         option.selected = true;
       }
@@ -1011,72 +1100,345 @@ export class UIRenderer {
     languageSelect.addEventListener('change', (e) => {
       const target = e.target as HTMLSelectElement;
       this.game.setLanguage(target.value);
-      this.closeMenu(menuOverlay);
-      setTimeout(() => this.showSettings(menuOverlay), 100);
+      // menuOverlay.remove();
+      // this.showMenu();
+    });
+
+    languageSelect.addEventListener('focus', () => {
+      languageSelect.style.borderColor = 'rgba(255,255,255,0.6)';
+      languageSelect.style.background = 'rgba(0,0,0,0.5)';
+    });
+
+    languageSelect.addEventListener('blur', () => {
+      languageSelect.style.borderColor = 'rgba(255,255,255,0.3)';
+      languageSelect.style.background = 'rgba(0,0,0,0.3)';
     });
 
     languageSection.appendChild(languageSelect);
-    settingsModal.appendChild(languageSection);
+    sectionsContainer.appendChild(languageSection);
 
-    const textSpeedSection = document.createElement('div');
-    textSpeedSection.style.cssText = `
+    // Text Speed Settings Section
+    const textSpeedSection = this.createSimpleSettingsSection(
+      langManager.getText('settings.textSpeed'),
+      langManager.getText('settings.textSpeed.desc'),
+      'speed'
+    );
+
+    const speedContainer = document.createElement('div');
+    speedContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 20px;
       margin-bottom: 20px;
-      text-align: left;
     `;
 
-    const textSpeedLabel = document.createElement('label');
-    textSpeedLabel.textContent = langManager.getText('settings.textSpeed') + ':';
-    textSpeedLabel.style.cssText = `
-      display: block;
-      margin-bottom: 5px;
+    const speedSlider = document.createElement('input');
+    speedSlider.type = 'range';
+    speedSlider.min = '10';
+    speedSlider.max = '100';
+    speedSlider.value = this.typewriterSpeed.toString();
+    speedSlider.style.cssText = `
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.3);
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+    `;
+
+    const speedValue = document.createElement('span');
+    speedValue.textContent = this.typewriterSpeed + 'ms';
+    speedValue.style.cssText = `
+      min-width: 60px;
+      text-align: center;
       font-weight: bold;
-      color: #333;
-    `;
-    textSpeedSection.appendChild(textSpeedLabel);
-
-    const textSpeedSlider = document.createElement('input');
-    textSpeedSlider.type = 'range';
-    textSpeedSlider.min = '10';
-    textSpeedSlider.max = '100';
-    textSpeedSlider.value = this.typewriterSpeed.toString();
-    textSpeedSlider.style.cssText = `
-      width: 100%;
-      margin-bottom: 5px;
+      color: white;
+      background: rgba(0,0,0,0.3);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
     `;
 
-    const textSpeedValue = document.createElement('span');
-    textSpeedValue.textContent = this.typewriterSpeed + 'ms';
-    textSpeedValue.style.cssText = `
-      font-size: 12px;
-      color: #666;
-    `;
-
-    textSpeedSlider.addEventListener('input', (e) => {
-      const target = e.target as HTMLInputElement;
-      this.typewriterSpeed = parseInt(target.value);
-      textSpeedValue.textContent = target.value + 'ms';
+    speedValue.addEventListener('change', (e: Event) => {
+      const target = e.target as HTMLSelectElement;
+      this.typewriterSpeed = Number.parseInt(target.value);
     });
 
-    textSpeedSection.appendChild(textSpeedSlider);
-    textSpeedSection.appendChild(textSpeedValue);
-    settingsModal.appendChild(textSpeedSection);
+    speedSlider.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      this.typewriterSpeed = parseInt(target.value);
+      speedValue.textContent = target.value + 'ms';
+    });
+
+    speedContainer.appendChild(speedSlider);
+    speedContainer.appendChild(speedValue);
+
+    // Speed presets
+    const speedPresets = document.createElement('div');
+    speedPresets.style.cssText = `
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    `;
+
+    const presets = [
+      { label: langManager.getText('ui.slow'), value: 60 },
+      { label: langManager.getText('ui.normal'), value: 30 },
+      { label: langManager.getText('ui.fast'), value: 15 },
+      { label: langManager.getText('ui.veryfast'), value: 5 }
+    ];
+
+    presets.forEach(preset => {
+      const presetButton = document.createElement('button');
+      presetButton.textContent = preset.label;
+      presetButton.style.cssText = `
+        padding: 8px 16px;
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: 6px;
+        background: rgba(0,0,0,0.3);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+      `;
+
+      presetButton.addEventListener('click', () => {
+        this.typewriterSpeed = preset.value;
+        speedSlider.value = preset.value.toString();
+        speedValue.textContent = preset.value + 'ms';
+      });
+
+      presetButton.addEventListener('mouseenter', () => {
+        presetButton.style.background = 'rgba(255,255,255,0.2)';
+        presetButton.style.borderColor = 'rgba(255,255,255,0.6)';
+      });
+
+      presetButton.addEventListener('mouseleave', () => {
+        presetButton.style.background = 'rgba(0,0,0,0.3)';
+        presetButton.style.borderColor = 'rgba(255,255,255,0.4)';
+      });
+
+      speedPresets.appendChild(presetButton);
+    });
+
+    textSpeedSection.appendChild(speedContainer);
+    textSpeedSection.appendChild(speedPresets);
+    sectionsContainer.appendChild(textSpeedSection);
+
+    // Keyboard Shortcuts Section
+    const shortcutsSection = this.createSimpleSettingsSection(
+      langManager.getText('settings.shortcuts', 'Phím tắt'),
+      langManager.getText('settings.shortcuts.desc'),
+      'keys'
+    );
+
+    const shortcutsList = document.createElement('div');
+    shortcutsList.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    `;
+
+    const shortcuts = [
+      { key: 'Space / Enter', action: langManager.getText('ui.next') },
+      { key: 'Backspace', action: langManager.getText('ui.back') },
+      { key: 'S', action: langManager.getText('ui.save') },
+      { key: 'L', action: langManager.getText('ui.load') },
+      { key: 'H', action: langManager.getText('ui.history') },
+      { key: 'Esc', action: langManager.getText('ui.menu', 'Menu') }
+    ];
+
+    shortcuts.forEach(shortcut => {
+      const shortcutItem = document.createElement('div');
+      shortcutItem.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: rgba(0,0,0,0.3);
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.2);
+        transition: all 0.3s ease;
+      `;
+
+      const keyElement = document.createElement('span');
+      keyElement.textContent = shortcut.key;
+      keyElement.style.cssText = `
+        background: rgba(255,255,255,0.2);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        min-width: 80px;
+        text-align: center;
+        font-size: 13px;
+        border: 1px solid rgba(255,255,255,0.3);
+      `;
+
+      const actionElement = document.createElement('span');
+      actionElement.textContent = shortcut.action;
+      actionElement.style.cssText = `
+        flex: 1;
+        font-size: 14px;
+        color: #f0f0f0;
+      `;
+
+      shortcutItem.appendChild(keyElement);
+      shortcutItem.appendChild(actionElement);
+
+      shortcutItem.addEventListener('mouseenter', () => {
+        shortcutItem.style.background = 'rgba(255,255,255,0.1)';
+        shortcutItem.style.borderColor = 'rgba(255,255,255,0.4)';
+      });
+
+      shortcutItem.addEventListener('mouseleave', () => {
+        shortcutItem.style.background = 'rgba(0,0,0,0.3)';
+        shortcutItem.style.borderColor = 'rgba(255,255,255,0.2)';
+      });
+
+      shortcutsList.appendChild(shortcutItem);
+    });
+
+    shortcutsSection.appendChild(shortcutsList);
+    sectionsContainer.appendChild(shortcutsSection);
+
+    contentContainer.appendChild(sectionsContainer);
+
+    const footerSection = document.createElement('div');
+    footerSection.style.cssText = `
+      text-align: center;
+      margin-top: auto;
+      padding-top: 20px;
+    `;
 
     const closeButton = document.createElement('button');
-    closeButton.textContent = langManager.getText('ui.close');
+    closeButton.className = 'back-menu';
+    closeButton.textContent = `← ${langManager.getText('ui.back')}`;
     closeButton.style.cssText = `
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
+      padding: 12px 30px;
       font-size: 16px;
-      margin-top: 10px;
+      font-weight: bold;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 120px;
     `;
-    closeButton.onclick = () => this.closeMenu(menuOverlay);
-    settingsModal.appendChild(closeButton);
+
+    closeButton.addEventListener('mouseenter', () => {
+      closeButton.style.background = 'rgba(255,255,255,0.2)';
+      closeButton.style.borderColor = 'rgba(255,255,255,0.6)';
+    });
+
+    closeButton.addEventListener('mouseleave', () => {
+      closeButton.style.background = 'rgba(0,0,0,0.3)';
+      closeButton.style.borderColor = 'rgba(255,255,255,0.4)';
+    });
+
+    closeButton.onclick = () => {
+      menuOverlay.remove();
+      this.showMainMenu();
+    };
+
+    footerSection.appendChild(closeButton);
+    contentContainer.appendChild(footerSection);
+
+    settingsContainer.appendChild(contentContainer);
 
     menuOverlay.innerHTML = '';
-    menuOverlay.appendChild(settingsModal);
+    menuOverlay.appendChild(settingsContainer);
+  }
+
+  private createSimpleSettingsSection(title: string, description: string, iconType: string): HTMLElement {
+    const section = document.createElement('div');
+    section.style.cssText = `
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 12px;
+    `;
+
+    const iconElement = document.createElement('div');
+    iconElement.style.cssText = `
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    `;
+
+    if (iconType === 'lang') {
+      iconElement.innerHTML = `
+        <div style="width: 16px; height: 16px; border: 2px solid white; border-radius: 50%; position: relative;">
+          <div style="position: absolute; top: -2px; left: 6px; width: 4px; height: 20px; border-left: 1px solid white;"></div>
+          <div style="position: absolute; top: 6px; left: -2px; width: 20px; height: 4px; border-top: 1px solid white;"></div>
+        </div>
+      `;
+    } else if (iconType === 'speed') {
+      iconElement.innerHTML = `
+        <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 12px solid white; transform: rotate(-45deg);"></div>
+      `;
+    } else if (iconType === 'keys') {
+      iconElement.innerHTML = `
+        <div style="display: flex; gap: 2px;">
+          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
+          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
+          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
+        </div>
+      `;
+    }
+
+    const titleElement = document.createElement('h3');
+    titleElement.textContent = title;
+    titleElement.style.cssText = `
+      margin: 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    `;
+
+    header.appendChild(iconElement);
+    header.appendChild(titleElement);
+
+    const descriptionElement = document.createElement('p');
+    descriptionElement.textContent = description;
+    descriptionElement.style.cssText = `
+      margin: 0 0 20px 0;
+      font-size: 14px;
+      opacity: 0.8;
+      color: #e0e0e0;
+      line-height: 1.4;
+    `;
+
+    section.appendChild(header);
+    section.appendChild(descriptionElement);
+
+    section.addEventListener('mouseenter', () => {
+      section.style.background = 'rgba(0,0,0,0.5)';
+      section.style.borderColor = 'rgba(255,255,255,0.3)';
+    });
+
+    section.addEventListener('mouseleave', () => {
+      section.style.background = 'rgba(0,0,0,0.4)';
+      section.style.borderColor = 'rgba(255,255,255,0.2)';
+    });
+
+    return section;
   }
 } 

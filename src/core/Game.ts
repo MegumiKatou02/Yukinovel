@@ -7,14 +7,14 @@ import { LanguageManager } from './LanguageManager.js';
 export class Game {
   private script: GameScript;
   private state: GameState;
-  private container!: HTMLElement; // Definite assignment assertion
+  private container!: HTMLElement;
   private audioManager: AudioManager;
   private saveManager: SaveManager;
   private uiRenderer: UIRenderer;
   private languageManager: LanguageManager;
   private eventHandlers: { [key: string]: GameEventHandler[] } = {};
-  private currentSceneDialogueHistory: DialogueEntry[] = []; // Lưu trữ lịch sử dialogue của scene hiện tại
-  private globalDialogueHistory: Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> = []; // Lưu trữ toàn bộ lịch sử dialogue
+  private currentSceneDialogueHistory: DialogueEntry[] = [];
+  private globalDialogueHistory: Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> = [];
 
   constructor(script: GameScript) {
     this.script = script;

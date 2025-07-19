@@ -7,18 +7,15 @@ export class LanguageManager {
   private gameScript: GameScript | null = null;
 
   constructor() {
-    // Load saved language from localStorage
     const savedLanguage = localStorage.getItem('vn-language');
     if (savedLanguage) {
       this.currentLanguage = savedLanguage;
     }
   }
 
-  // Initialize with game script
   initialize(gameScript: GameScript): void {
     this.gameScript = gameScript;
     
-    // Set up default languages if not provided
     if (!gameScript.languages || gameScript.languages.length === 0) {
       this.languages = [
         { code: 'vi', name: 'Tiếng Việt', isDefault: true },
@@ -28,26 +25,21 @@ export class LanguageManager {
       this.languages = gameScript.languages;
     }
 
-    // Set up localization
     if (gameScript.localization) {
-      // Merge UI and system localization
       this.localization = {
         ...gameScript.localization.ui,
         ...gameScript.localization.system
       };
     }
 
-    // Set default language if current language is not available
     const defaultLang = this.languages.find(lang => lang.isDefault);
     if (!this.languages.find(lang => lang.code === this.currentLanguage)) {
       this.currentLanguage = defaultLang?.code || this.languages[0]?.code || 'vi';
     }
 
-    // Add default UI texts if not provided
     this.addDefaultUITexts();
   }
 
-  // Add default UI texts
   private addDefaultUITexts(): void {
     const defaultTexts: { [key: string]: LocalizedText } = {
       'menu.start': {
@@ -118,6 +110,46 @@ export class LanguageManager {
         vi: 'Toàn màn hình',
         en: 'Fullscreen'
       },
+      'settings.shortcuts': {
+        vi: 'Phím tắt',
+        en: 'Keyboard Shortcuts'
+      },
+      'settings.subtitle': {
+        vi: 'Tùy chỉnh trải nghiệm game của bạn',
+        en: 'Customize your game experience'
+      },
+      'ui.menu': {
+        vi: 'Menu',
+        en: 'Menu'
+      },
+      'ui.slow': {
+        vi: 'Chậm',
+        en: 'Slow'
+      },
+      'ui.normal': {
+        vi: 'Bình thường',
+        en: 'Normal'
+      },
+      'ui.fast': {
+        vi: 'Nhanh',
+        en: 'Fast'
+      },
+      'ui.veryfast': {
+        vi: 'Rất nhanh',
+        en: 'Very Fast'
+      },
+      'settings.language.desc': {
+        vi: 'Chọn ngôn ngữ hiển thị trong game',
+        en: 'Choose the display language for the game'
+      },
+      'settings.textSpeed.desc': {
+        vi: 'Điều chỉnh tốc độ hiển thị văn bản',
+        en: 'Adjust text display speed'
+      },
+      'settings.shortcuts.desc': {
+        vi: 'Các phím tắt có sẵn trong game',
+        en: 'Available keyboard shortcuts in the game'
+      },
       'history.title': {
         vi: 'Lịch sử hội thoại toàn bộ',
         en: 'Complete Dialogue History'
@@ -128,7 +160,6 @@ export class LanguageManager {
       }
     };
 
-    // Merge with existing localization
     Object.keys(defaultTexts).forEach(key => {
       if (!this.localization[key]) {
         this.localization[key] = defaultTexts[key];
@@ -136,17 +167,14 @@ export class LanguageManager {
     });
   }
 
-  // Get current language
   getCurrentLanguage(): string {
     return this.currentLanguage;
   }
 
-  // Get available languages
   getAvailableLanguages(): LanguageConfig[] {
     return this.languages;
   }
 
-  // Set current language
   setLanguage(languageCode: string): void {
     if (this.languages.find(lang => lang.code === languageCode)) {
       this.currentLanguage = languageCode;
@@ -154,7 +182,6 @@ export class LanguageManager {
     }
   }
 
-  // Get localized text
   getText(key: string, fallback?: string): string {
     const localizedText = this.localization[key];
     
@@ -166,7 +193,6 @@ export class LanguageManager {
       return localizedText;
     }
 
-    // Return text in current language or fallback to default/first available
     return localizedText[this.currentLanguage] || 
            localizedText[this.languages.find(l => l.isDefault)?.code || 'vi'] ||
            Object.values(localizedText)[0] ||
@@ -174,7 +200,6 @@ export class LanguageManager {
            key;
   }
 
-  // Get localized text from LocalizedText object
   getLocalizedText(text: string | LocalizedText, fallback?: string): string {
     if (typeof text === 'string') {
       return text;
@@ -184,7 +209,6 @@ export class LanguageManager {
       return fallback || '';
     }
 
-    // Return text in current language or fallback to default/first available
     return text[this.currentLanguage] || 
            text[this.languages.find(l => l.isDefault)?.code || 'vi'] ||
            Object.values(text)[0] ||
@@ -192,14 +216,12 @@ export class LanguageManager {
            '';
   }
 
-  // Get game title in current language
   getGameTitle(): string {
     if (!this.gameScript) return '';
     
     return this.getLocalizedText(this.gameScript.title, 'Visual Novel');
   }
 
-  // Get subtitle text for main menu
   getSubtitleText(): string {
     if (!this.gameScript) return '';
     
@@ -209,12 +231,10 @@ export class LanguageManager {
     return `${versionText} ${this.gameScript.version || '1.0.0'} - ${authorText}: ${this.gameScript.author || 'Unknown'}`;
   }
 
-  // Add custom localization at runtime
   addLocalization(key: string, texts: LocalizedText): void {
     this.localization[key] = texts;
   }
 
-  // Get language name by code
   getLanguageName(code: string): string {
     const language = this.languages.find(lang => lang.code === code);
     return language?.name || code;

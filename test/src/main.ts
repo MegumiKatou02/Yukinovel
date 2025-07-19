@@ -149,8 +149,10 @@ const game = new Game({
                     text: {
                         vi: 'Trong một vương quốc xa xôi, nơi có những ngọn núi cao chót vót và những khu rừng bí ẩn...',
                         en: 'he he he'
+                    },
+                    characterSprite: {
+                        Linh: 'he3.jpg',
                     }
-                   
                 },
                 {
                     character: 'narrator',
