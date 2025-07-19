@@ -16,6 +16,7 @@ export class UIRenderer {
   private isLogVisible: boolean = false;
   private mainMenuContainer!: HTMLElement;
   private gameContainer!: HTMLElement;
+  private exitConfirmModal!: HTMLElement | null;
   
   // Typewriter effect properties
   private isTyping: boolean = false;
@@ -29,6 +30,7 @@ export class UIRenderer {
   constructor(game: Game) {
     this.game = game;
     this.backgroundVideo = null;
+    this.exitConfirmModal = null;
   }
 
   private detectBackgroundType(url: string): 'image' | 'video' | 'gif' {
@@ -507,7 +509,6 @@ export class UIRenderer {
   }
 
   showCredits(): void {
-    // Implementation for credits modal
     console.log('Credits modal');
   }
 
@@ -515,7 +516,7 @@ export class UIRenderer {
     const langManager = this.game.getLanguageManager();
     const controls = [
       { key: 'Enter', action: langManager.getText('ui.next'), onClick: () => this.handleNext() },
-      { key: 'Esc', action: langManager.getText('ui.home'), onClick: () => this.game.showMainMenu() },
+      { key: 'Esc', action: langManager.getText('exit.title', 'Thoát'), onClick: () => this.showExitConfirm() },
       { key: 'S', action: langManager.getText('ui.save'), onClick: () => this.game.saveGame() },
       { key: 'L', action: langManager.getText('ui.load'), onClick: () => this.game.loadGame() },
       { key: 'H', action: langManager.getText('ui.history'), onClick: () => this.toggleLog() }
@@ -589,7 +590,8 @@ export class UIRenderer {
         e.preventDefault();
         this.handleNext();
       } else if (e.code === 'Escape') {
-        this.game.showMainMenu();
+        e.preventDefault();
+        this.showExitConfirm();
       } else if (e.code === 'Backspace') {
         e.preventDefault();
         this.game.back();
@@ -690,6 +692,160 @@ export class UIRenderer {
   private hideLog(): void {
     this.logContainer.style.display = 'none';
     this.isLogVisible = false;
+  }
+
+  private showExitConfirm(): void {
+    if (this.exitConfirmModal) return;
+
+    const langManager = this.game.getLanguageManager();
+    
+    this.exitConfirmModal = document.createElement('div');
+    this.exitConfirmModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+      background: rgba(30, 30, 30, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    `;
+
+    const title = document.createElement('h3');
+    title.textContent = langManager.getText('exit.title', 'Xác nhận thoát');
+    title.style.cssText = `
+      color: #fff;
+      margin: 0 0 15px 0;
+      font-size: 20px;
+      font-weight: normal;
+    `;
+
+    const message = document.createElement('p');
+    message.textContent = langManager.getText('exit.message', 'Bạn có chắc chắn muốn thoát về menu chính không?');
+    message.style.cssText = `
+      color: #ccc;
+      margin: 0 0 25px 0;
+      font-size: 14px;
+      line-height: 1.4;
+    `;
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    `;
+
+    const yesButton = document.createElement('button');
+    yesButton.textContent = langManager.getText('ui.yes', 'Có');
+    yesButton.style.cssText = `
+      padding: 10px 20px;
+      background: #e74c3c;
+      color: white;
+      border: 1px solid #c0392b;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      min-width: 80px;
+    `;
+
+    const noButton = document.createElement('button');
+    noButton.textContent = langManager.getText('ui.no', 'Không');
+    noButton.id = 'exit-no-button';
+    noButton.style.cssText = `
+      padding: 10px 20px;
+      background: #27ae60;
+      color: white;
+      border: 1px solid #229954;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 80px;
+      position: relative;
+    `;
+
+    yesButton.onmouseover = () => yesButton.style.background = '#c0392b';
+    yesButton.onmouseout = () => yesButton.style.background = '#e74c3c';
+
+    noButton.onmouseover = () => noButton.style.background = '#229954';
+    noButton.onmouseout = () => noButton.style.background = '#27ae60';
+
+    yesButton.onclick = () => {
+      this.hideExitConfirm();
+      this.game.showMainMenu();
+    };
+
+    noButton.onclick = () => {
+      this.hideExitConfirm();
+    };
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.hideExitConfirm();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        noButton.click();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    (this.exitConfirmModal as any).keyHandler = handleKeyPress;
+
+    buttonsContainer.appendChild(yesButton);
+    buttonsContainer.appendChild(noButton);
+    modalContent.appendChild(title);
+    modalContent.appendChild(message);
+    modalContent.appendChild(buttonsContainer);
+    this.exitConfirmModal.appendChild(modalContent);
+    document.body.appendChild(this.exitConfirmModal);
+
+    requestAnimationFrame(() => {
+      this.exitConfirmModal!.style.opacity = '1';
+      modalContent.style.transform = 'scale(1)';
+    });
+  }
+
+  private hideExitConfirm(): void {
+    if (!this.exitConfirmModal) return;
+
+    const keyHandler = (this.exitConfirmModal as any).keyHandler;
+    if (keyHandler) {
+      document.removeEventListener('keydown', keyHandler);
+    }
+
+    this.exitConfirmModal.style.opacity = '0';
+    const modalContent = this.exitConfirmModal.querySelector('div') as HTMLElement;
+    if (modalContent) {
+      modalContent.style.transform = 'scale(0.9)';
+    }
+
+    setTimeout(() => {
+      if (this.exitConfirmModal) {
+        document.body.removeChild(this.exitConfirmModal);
+        this.exitConfirmModal = null;
+      }
+    }, 300);
   }
 
   // Update scene
@@ -1446,12 +1602,12 @@ export class UIRenderer {
       backgroundStyle = `background: ${config.backgroundColor};`;
     }
     
-    const backgroundUrl = config.backgroundVideo || config.background;
-    if (backgroundUrl) {
-      const backgroundType = this.detectBackgroundType(backgroundUrl);
+    const settingsBackgroundUrl = config.backgroundVideo || config.background;
+    if (settingsBackgroundUrl) {
+      const backgroundType = this.detectBackgroundType(settingsBackgroundUrl);
       
       if (backgroundType === 'video') {
-        const video = this.setupBackgroundVideo(backgroundUrl);
+        const video = this.setupBackgroundVideo(settingsBackgroundUrl);
         video.style.position = 'absolute';
         video.style.top = '0';
         video.style.left = '0';
@@ -1462,9 +1618,8 @@ export class UIRenderer {
         container.appendChild(video);
         backgroundStyle = 'background: transparent;';
       } else {
-        // Image hoặc GIF background
         backgroundStyle = `
-          background-image: url('${backgroundUrl}');
+          background-image: url('${settingsBackgroundUrl}');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
