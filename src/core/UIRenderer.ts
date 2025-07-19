@@ -581,7 +581,10 @@ export class UIRenderer {
       this.handleNext();
     });
 
+    const gameContainer = document.querySelector('#container-game') as HTMLElement;
+
     document.addEventListener('keydown', (e) => {
+      if (gameContainer.style.display === 'none') return;
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         this.handleNext();
