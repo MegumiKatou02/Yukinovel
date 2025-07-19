@@ -27,6 +27,8 @@ export interface LanguageConfig {
 export interface Scene {
   id: string;
   background?: string;
+  backgroundVideo?: string;
+  backgroundType?: 'image' | 'video' | 'gif' | 'auto';
   music?: string;
   characters?: Character[];
   dialogue: DialogueEntry[];

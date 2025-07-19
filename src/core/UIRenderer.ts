@@ -5,6 +5,7 @@ export class UIRenderer {
   private game: Game;
   private container!: HTMLElement;
   private backgroundElement!: HTMLElement;
+  private backgroundVideo!: HTMLVideoElement | null;
   private characterContainer!: HTMLElement;
   private dialogueContainer!: HTMLElement;
   private choicesContainer!: HTMLElement;
@@ -19,7 +20,7 @@ export class UIRenderer {
   // Typewriter effect properties
   private isTyping: boolean = false;
   private currentTypewriterTimeout: number | null = null;
-  private typewriterSpeed: number = 30; // milliseconds per character
+  private typewriterSpeed: number = 20;
   private currentDialogueText: string = '';
   private currentCharacterName: string = '';
   private currentCharacterColor: string = '#fff';
@@ -27,6 +28,79 @@ export class UIRenderer {
 
   constructor(game: Game) {
     this.game = game;
+    this.backgroundVideo = null;
+  }
+
+  private detectBackgroundType(url: string): 'image' | 'video' | 'gif' {
+    const extension = url.toLowerCase().split('.').pop();
+    if (extension === 'mp4' || extension === 'webm' || extension === 'ogg') {
+      return 'video';
+    } else if (extension === 'gif') {
+      return 'gif';
+    } else {
+      return 'image';
+    }
+  }
+
+  private setupBackgroundVideo(url: string): HTMLVideoElement {
+    const video = document.createElement('video');
+    video.src = url;
+    video.autoplay = true;
+    video.loop = true;
+    video.muted = true
+    video.playsInline = true;
+    
+    return video;
+  }
+
+  private setupMainMenuBackground(config: any): void {
+    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+    
+    if (config.backgroundColor) {
+      backgroundStyle = `background: ${config.backgroundColor};`;
+    }
+    
+    const backgroundUrl = config.backgroundVideo || config.background;
+    if (backgroundUrl) {
+      const backgroundType = this.detectBackgroundType(backgroundUrl);
+      
+      if (backgroundType === 'video') {
+        const video = this.setupBackgroundVideo(backgroundUrl);
+        video.style.position = 'absolute';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.zIndex = '0';
+        this.mainMenuContainer.appendChild(video);
+        backgroundStyle = 'background: transparent;';
+      } else {
+        backgroundStyle = `
+          background-image: url('${backgroundUrl}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        `;
+      }
+    }
+    
+    if (config.backgroundOverlay) {
+      backgroundStyle += `
+        position: relative;
+      `;
+    }
+    
+    this.mainMenuContainer.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      ${backgroundStyle}
+      display: flex;
+      pointer-events: auto;
+    `;
   }
 
   // Render initial UI structure
@@ -199,40 +273,8 @@ export class UIRenderer {
     const config = this.game.getScript().settings?.mainMenu || {};
     const langManager = this.game.getLanguageManager();
     
-    // Background setup
-    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
-    
-    if (config.backgroundColor) {
-      backgroundStyle = `background: ${config.backgroundColor};`;
-    }
-    
-    if (config.background) {
-      backgroundStyle = `
-        background-image: url('${config.background}');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      `;
-    }
-    
-    if (config.backgroundOverlay) {
-      backgroundStyle += `
-        position: relative;
-      `;
-    }
-    
-    this.mainMenuContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      ${backgroundStyle}
-      display: flex;
-      pointer-events: auto;
-    `;
-    
-    // Overlay
+    this.setupMainMenuBackground(config);
+
     if (config.backgroundOverlay) {
       const overlay = document.createElement('div');
       overlay.style.cssText = `
@@ -649,9 +691,7 @@ export class UIRenderer {
 
   // Update scene
   updateScene(scene: Scene): void {
-    if (scene.background) {
-      this.backgroundElement.style.backgroundImage = `url(${scene.background})`;
-    }
+    this.updateSceneBackground(scene);
 
     this.updateCharacters(scene.characters || []);
     
@@ -659,6 +699,45 @@ export class UIRenderer {
       scene.characters.forEach(character => {
         this.originalCharacterSprites[character.name] = character.image;
       });
+    }
+  }
+
+  private updateSceneBackground(scene: Scene): void {
+    if (this.backgroundVideo) {
+      this.backgroundVideo.pause();
+      this.backgroundVideo.remove();
+      this.backgroundVideo = null;
+    }
+
+    this.backgroundElement.style.backgroundImage = '';
+    this.backgroundElement.innerHTML = '';
+
+    const backgroundUrl = scene.backgroundVideo || scene.background;
+    if (!backgroundUrl) return;
+
+    let backgroundType = scene.backgroundType || 'auto';
+    if (backgroundType === 'auto') {
+      backgroundType = this.detectBackgroundType(backgroundUrl);
+    }
+
+    switch (backgroundType) {
+      case 'video':
+        this.backgroundVideo = this.setupBackgroundVideo(backgroundUrl);
+        this.backgroundVideo.style.position = 'absolute';
+        this.backgroundVideo.style.top = '0';
+        this.backgroundVideo.style.left = '0';
+        this.backgroundVideo.style.width = '100%';
+        this.backgroundVideo.style.height = '100%';
+        this.backgroundVideo.style.objectFit = 'cover';
+        this.backgroundVideo.style.zIndex = '0';
+        this.backgroundElement.appendChild(this.backgroundVideo);
+        break;
+      
+      case 'gif':
+      case 'image':
+      default:
+        this.backgroundElement.style.backgroundImage = `url(${backgroundUrl})`;
+        break;
     }
   }
 
@@ -879,6 +958,8 @@ export class UIRenderer {
     const settingsContainer = document.createElement('div');
     settingsContainer.id = 'settings-container';
     
+    this.setupSettingsBackground(settingsContainer, config);
+
     let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
     
     if (config.backgroundColor) {
@@ -907,7 +988,6 @@ export class UIRenderer {
       z-index: 1000;
     `;
 
-    // Background overlay (same as main menu)
     if (config.backgroundOverlay) {
       const overlay = document.createElement('div');
       overlay.style.cssText = `
@@ -1354,5 +1434,58 @@ export class UIRenderer {
     });
 
     return section;
+  }
+
+  private setupSettingsBackground(container: HTMLElement, config: any): void {
+    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+    
+    if (config.backgroundColor) {
+      backgroundStyle = `background: ${config.backgroundColor};`;
+    }
+    
+    const backgroundUrl = config.backgroundVideo || config.background;
+    if (backgroundUrl) {
+      const backgroundType = this.detectBackgroundType(backgroundUrl);
+      
+      if (backgroundType === 'video') {
+        const video = this.setupBackgroundVideo(backgroundUrl);
+        video.style.position = 'absolute';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.zIndex = '0';
+        container.appendChild(video);
+        backgroundStyle = 'background: transparent;';
+      } else {
+        // Image hoặc GIF background
+        backgroundStyle = `
+          background-image: url('${backgroundUrl}');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        `;
+      }
+    }
+    
+    if (config.backgroundOverlay) {
+      backgroundStyle += `
+        position: relative;
+      `;
+    }
+    
+    container.style.cssText = `
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      ${backgroundStyle}
+      color: white;
+      overflow-y: auto;
+      pointer-events: auto;
+      z-index: 1000;
+    `;
   }
 } 
