@@ -56,7 +56,6 @@ export class Game {
     // Render initial UI
     this.uiRenderer.render(this.container);
     
-    // Show main menu if configured, otherwise start game directly
     if (this.script.settings?.mainMenu) {
       this.showMainMenu();
     } else {
@@ -118,7 +117,6 @@ export class Game {
     this.emit('dialogue', { dialogue });
   }
 
-  // User interactions
   next(): void {
     const currentScene = this.getCurrentScene();
     if (!currentScene) return;
@@ -148,6 +146,7 @@ export class Game {
     this.showDialogue();
   }
 
+  // Khong dung nua
   back(): void {
     if (this.state.currentDialogue > 0) {
       this.state.currentDialogue--;
@@ -277,5 +276,9 @@ export class Game {
 
   getAudioManager(): AudioManager {
     return this.audioManager;
+  }
+
+  getUIRenderer(): UIRenderer {
+    return this.uiRenderer;
   }
 } 
