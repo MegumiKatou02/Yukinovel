@@ -64,7 +64,7 @@ export class Game {
   }
 
   // Scene management
-  startScene(sceneId: string, fadeOptions?: { backgroundFade?: boolean }): void {
+  startScene(sceneId: string, fadeOptions?: { backgroundFade?: boolean; backgroundAnimation?: any }): void {
     const scene = this.script.scenes.find(s => s.id === sceneId);
     if (!scene) {
       console.error(`Scene "${sceneId}" not found`);
@@ -80,7 +80,7 @@ export class Game {
     }
 
     if (fadeOptions?.backgroundFade) {
-      this.uiRenderer.updateSceneWithFade(scene, true);
+      this.uiRenderer.updateSceneWithFade(scene, true, fadeOptions.backgroundAnimation);
     } else {
       this.uiRenderer.updateScene(scene);
     }
@@ -169,9 +169,12 @@ export class Game {
     switch (action) {
       case 'jump':
         if (target) {
+          const fadeAnimation = currentDialogue?.fadeAnimation;
           const fadeOptions = {
-            backgroundFade: currentDialogue?.fadeAnimation?.enabled === true && 
-                          currentDialogue?.fadeAnimation?.backgroundFade !== false
+            backgroundFade: fadeAnimation?.enabled === true && 
+                          fadeAnimation?.backgroundFade !== false,
+            backgroundAnimation: typeof fadeAnimation?.backgroundFade === 'object' ? 
+                               fadeAnimation.backgroundFade : undefined
           };
           this.startScene(target, fadeOptions);
         }

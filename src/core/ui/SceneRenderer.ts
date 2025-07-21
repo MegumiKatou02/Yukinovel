@@ -1,4 +1,4 @@
-import { Scene, Character, DialogueEntry } from '../../types/index.js';
+import { Scene, Character, DialogueEntry, AnimationType } from '../../types/index.js';
 import { Game } from '../Game.js';
 
 export class SceneRenderer {
@@ -8,7 +8,7 @@ export class SceneRenderer {
   private backgroundVideo: HTMLVideoElement | null = null;
   private originalCharacterSprites: { [characterName: string]: string | null | undefined } = {};
   private currentBackgroundUrl: string = '';
-  private fadeAnimationDuration: number = 500; // milliseconds
+  private fadeAnimationDuration: number = 500;
 
   constructor(game: Game, backgroundElement: HTMLElement, characterContainer: HTMLElement) {
     this.game = game;
@@ -27,9 +27,10 @@ export class SceneRenderer {
     }
   }
 
-  updateSceneWithFade(scene: Scene, shouldFadeBackground: boolean = false): void {
+  updateSceneWithFade(scene: Scene, shouldFadeBackground: boolean = false, backgroundAnimation?: any): void {
     if (shouldFadeBackground) {
-      this.updateSceneBackgroundWithFade(scene, true);
+      const animationConfig = backgroundAnimation ? { animation: backgroundAnimation.animation } : undefined;
+      this.updateSceneBackgroundWithFade(scene, true, animationConfig);
       this.updateCharacters(scene.characters || [], true);
     } else {
       this.updateSceneBackground(scene);
@@ -50,7 +51,7 @@ export class SceneRenderer {
     const shouldUseFade = dialogue.fadeAnimation?.enabled === true;
     const fadeAnimationConfig = dialogue.fadeAnimation;
 
-    const shouldCharacterFade = (charName: string): { enabled: boolean; duration?: number } => {
+    const shouldCharacterFade = (charName: string): { enabled: boolean; duration?: number; animation?: AnimationType } => {
       if (!shouldUseFade) return { enabled: false };
       
       const characterFade = fadeAnimationConfig?.characterFade;
@@ -69,7 +70,8 @@ export class SceneRenderer {
         if (typeof charConfig === 'object' && charConfig !== null) {
           return { 
             enabled: charConfig.enabled, 
-            duration: charConfig.duration || fadeAnimationConfig?.duration 
+            duration: charConfig.duration || fadeAnimationConfig?.duration,
+            animation: charConfig.animation
           };
         }
       }
@@ -84,13 +86,13 @@ export class SceneRenderer {
 
     if (character && dialogue.sprite) {
       const fadeConfig = shouldCharacterFade(characterName!);
-      this.updateCharacterSprite(characterName!, dialogue.sprite, fadeConfig.enabled, fadeConfig.duration);
+      this.updateCharacterSprite(characterName!, dialogue.sprite, fadeConfig.enabled, fadeConfig.duration, fadeConfig);
     }
 
     if (dialogue.characterSprite) {
       Object.keys(dialogue.characterSprite).forEach(charName => {
         const fadeConfig = shouldCharacterFade(charName);
-        this.updateCharacterSprite(charName, dialogue.characterSprite![charName], fadeConfig.enabled, fadeConfig.duration);
+        this.updateCharacterSprite(charName, dialogue.characterSprite![charName], fadeConfig.enabled, fadeConfig.duration, fadeConfig);
       });
     }
 
@@ -120,17 +122,23 @@ export class SceneRenderer {
     this.backgroundElement.style.opacity = '1';
   }
 
-  private updateSceneBackgroundWithFade(scene: Scene, shouldFade: boolean): void {
+  private updateSceneBackgroundWithFade(scene: Scene, shouldFade: boolean, fadeConfig?: { animation?: AnimationType }): void {
     const backgroundUrl = scene.backgroundVideo || scene.background;
     
     if (backgroundUrl === this.currentBackgroundUrl) return;
     
     if (!backgroundUrl) {
       if (shouldFade) {
+        const outAnimation = fadeConfig?.animation ? 
+          (fadeConfig.animation.endsWith('In') ? 
+            fadeConfig.animation.replace(/In$/, 'Out') as AnimationType : 
+            'fadeOut' as AnimationType) : 
+          'fadeOut' as AnimationType;
+
         this.fadeOutBackground(() => {
           this.clearBackground();
           this.currentBackgroundUrl = '';
-        });
+        }, outAnimation);
       } else {
         this.clearBackground();
         this.currentBackgroundUrl = '';
@@ -139,11 +147,19 @@ export class SceneRenderer {
     }
 
     if (shouldFade) {
+      const outAnimation = fadeConfig?.animation ? 
+        (fadeConfig.animation.endsWith('In') ? 
+          fadeConfig.animation.replace(/In$/, 'Out') as AnimationType : 
+          'fadeOut' as AnimationType) : 
+        'fadeOut' as AnimationType;
+        
+      const inAnimation = fadeConfig?.animation || 'fadeIn' as AnimationType;
+      
       this.fadeOutBackground(() => {
         this.setNewBackground(scene, backgroundUrl!);
         this.currentBackgroundUrl = backgroundUrl!;
-        this.fadeInBackground();
-      });
+        this.fadeInBackground(inAnimation);
+      }, outAnimation);
     } else {
       this.setNewBackground(scene, backgroundUrl!);
       this.currentBackgroundUrl = backgroundUrl!;
@@ -151,23 +167,82 @@ export class SceneRenderer {
     }
   }
 
-  private fadeOutBackground(callback: () => void): void {
-    this.backgroundElement.style.transition = `opacity ${this.fadeAnimationDuration}ms ease-in-out`;
-    this.backgroundElement.style.opacity = '0';
-    setTimeout(() => {
-      this.backgroundElement.style.transition = 'none';
+  private fadeOutCharacter(charElement: HTMLElement, callback: () => void, customDuration?: number, animation: AnimationType = 'fadeOut'): void {
+    const duration = customDuration || this.fadeAnimationDuration;
+    console.log(`Character fade out: ${animation}, duration: ${duration}ms`);
+    
+    charElement.classList.remove('animate__animated');
+    charElement.className = charElement.className.replace(/animate__\w+/g, '');
+    
+    charElement.style.setProperty('--animate-duration', `${duration}ms`);
+    
+    charElement.offsetHeight;
+    
+    charElement.classList.add('animate__animated', `animate__${animation}`);
+    
+    const handleAnimationEnd = () => {
+      console.log(`Character fade out completed: ${animation}`);
+      charElement.classList.remove('animate__animated', `animate__${animation}`);
+      charElement.removeEventListener('animationend', handleAnimationEnd);
       callback();
-    }, this.fadeAnimationDuration);
+    };
+    charElement.addEventListener('animationend', handleAnimationEnd);
   }
 
-  private fadeInBackground(): void {
-    setTimeout(() => {
-      this.backgroundElement.style.transition = `opacity ${this.fadeAnimationDuration}ms ease-in-out`;
-      this.backgroundElement.style.opacity = '1';
-      setTimeout(() => {
-        this.backgroundElement.style.transition = 'none';
-      }, this.fadeAnimationDuration);
-    }, 50);
+  private fadeInCharacter(charElement: HTMLElement, customDuration?: number, animation: AnimationType = 'fadeIn'): void {
+    const duration = customDuration || this.fadeAnimationDuration;
+    console.log(`Character fade in: ${animation}, duration: ${duration}ms`);
+    
+    charElement.classList.remove('animate__animated');
+    charElement.className = charElement.className.replace(/animate__\w+/g, '');
+    
+    charElement.style.setProperty('--animate-duration', `${duration}ms`);
+    
+    charElement.offsetHeight;
+    
+    charElement.classList.add('animate__animated', `animate__${animation}`);
+    
+    const handleAnimationEnd = () => {
+      console.log(`Character fade in completed: ${animation}`);
+      charElement.classList.remove('animate__animated', `animate__${animation}`);
+      charElement.removeEventListener('animationend', handleAnimationEnd);
+    };
+    charElement.addEventListener('animationend', handleAnimationEnd);
+  }
+
+  private fadeOutBackground(callback: () => void, animation: AnimationType = 'fadeOut'): void {
+    this.backgroundElement.classList.remove('animate__animated');
+    this.backgroundElement.className = this.backgroundElement.className.replace(/animate__\w+/g, '');
+    
+    this.backgroundElement.style.setProperty('--animate-duration', `${this.fadeAnimationDuration}ms`);
+    
+    this.backgroundElement.offsetHeight;
+    
+    this.backgroundElement.classList.add('animate__animated', `animate__${animation}`);
+    
+    const handleAnimationEnd = () => {
+      this.backgroundElement.classList.remove('animate__animated', `animate__${animation}`);
+      this.backgroundElement.removeEventListener('animationend', handleAnimationEnd);
+      callback();
+    };
+    this.backgroundElement.addEventListener('animationend', handleAnimationEnd);
+  }
+
+  private fadeInBackground(animation: AnimationType = 'fadeIn'): void {
+    this.backgroundElement.classList.remove('animate__animated');
+    this.backgroundElement.className = this.backgroundElement.className.replace(/animate__\w+/g, '');
+    
+    this.backgroundElement.style.setProperty('--animate-duration', `${this.fadeAnimationDuration}ms`);
+    
+    this.backgroundElement.offsetHeight;
+    
+    this.backgroundElement.classList.add('animate__animated', `animate__${animation}`);
+    
+    const handleAnimationEnd = () => {
+      this.backgroundElement.classList.remove('animate__animated', `animate__${animation}`);
+      this.backgroundElement.removeEventListener('animationend', handleAnimationEnd);
+    };
+    this.backgroundElement.addEventListener('animationend', handleAnimationEnd);
   }
 
   private clearBackground(): void {
@@ -258,6 +333,7 @@ export class SceneRenderer {
       if (isNewCharacter) {
         charElement = document.createElement('div');
         charElement.id = `character-${character.name}`;
+        charElement.className = 'character-element'; // Add base class
         this.characterContainer.appendChild(charElement);
       }
       
@@ -272,51 +348,27 @@ export class SceneRenderer {
       
       const xValue = typeof x === 'string' ? x : `${x}px`;
       const yValue = typeof y === 'string' ? y : `${y}px`;
+      
+      charElement.style.position = 'absolute';
+      charElement.style.bottom = yValue;
+      charElement.style.left = xValue;
+      charElement.style.width = `${width}px`;
+      charElement.style.height = `${height}px`;
+      charElement.style.backgroundImage = `url(${character.image || ''})`;
+      charElement.style.backgroundSize = 'contain';
+      charElement.style.backgroundPosition = 'bottom';
+      charElement.style.backgroundRepeat = 'no-repeat';
+      charElement.style.transform = `scale(${scale})`;
+      charElement.style.transformOrigin = 'bottom center';
 
-      charElement.style.cssText = `
-        position: absolute;
-        bottom: ${yValue};
-        left: ${xValue};
-        width: ${width}px;
-        height: ${height}px;
-        background-image: url(${character.image || ''});
-        background-size: contain;
-        background-position: bottom;
-        background-repeat: no-repeat;
-        transform: scale(${scale});
-        transform-origin: bottom center;
-        opacity: 1;
-      `;
-
-      if (fadeInNewCharacters && isNewCharacter) {
+      if (isNewCharacter && fadeInNewCharacters) {
         charElement.style.opacity = '0';
-        charElement.style.transition = `opacity ${this.fadeAnimationDuration}ms ease-in-out`;
         setTimeout(() => {
-          if (charElement) {
-            charElement.style.opacity = '1';
-          }
+          charElement.style.opacity = '1';
+          this.fadeInCharacter(charElement);
         }, 50);
-      } else {
-        charElement.style.transition = 'none';
       }
     });
-  }
-
-  private fadeOutCharacter(charElement: HTMLElement, callback: () => void, customDuration?: number): void {
-    const duration = customDuration || this.fadeAnimationDuration;
-    charElement.style.transition = `opacity ${duration}ms ease-in-out`;
-    charElement.style.opacity = '0';
-    setTimeout(callback, duration);
-  }
-
-  private fadeInCharacter(charElement: HTMLElement, customDuration?: number): void {
-    const duration = customDuration || this.fadeAnimationDuration;
-    setTimeout(() => {
-      if (charElement) {
-        charElement.style.transition = `opacity ${duration}ms ease-in-out`;
-        charElement.style.opacity = '1';
-      }
-    }, 50);
   }
 
   private updateCharacterEmotion(characterName: string, emotion: string, shouldFade: boolean, customDuration?: number): void {
@@ -336,7 +388,7 @@ export class SceneRenderer {
     }
   }
 
-  private updateCharacterSprite(characterName: string, sprite: string | null, shouldFade: boolean, customDuration?: number): void {
+  private updateCharacterSprite(characterName: string, sprite: string | null, shouldFade: boolean, customDuration?: number, fadeConfig?: { animation?: AnimationType }): void {
     const charElement = document.getElementById(`character-${characterName}`);
     if (charElement) {
       const currentSprite = charElement.style.backgroundImage;
@@ -344,13 +396,19 @@ export class SceneRenderer {
       
       if (currentSprite !== newSprite) {
         if (shouldFade) {
-          charElement.style.transition = `opacity ${customDuration || this.fadeAnimationDuration}ms ease-in-out`;
+          const outAnimation = fadeConfig?.animation ? 
+            (fadeConfig.animation.endsWith('In') ? 
+              fadeConfig.animation.replace(/In$/, 'Out') as AnimationType : 
+              'fadeOut' as AnimationType) : 
+            'fadeOut' as AnimationType;
+            
+          const inAnimation = fadeConfig?.animation || 'fadeIn' as AnimationType;
+          
           this.fadeOutCharacter(charElement, () => {
             charElement.style.backgroundImage = newSprite;
-            this.fadeInCharacter(charElement, customDuration);
-          }, customDuration);
+            this.fadeInCharacter(charElement, customDuration, inAnimation);
+          }, customDuration, outAnimation);
         } else {
-          charElement.style.transition = 'none';
           charElement.style.backgroundImage = newSprite;
         }
       }
@@ -370,7 +428,7 @@ export class SceneRenderer {
       });
     }
     
-    const shouldCharacterFade = (charName: string): { enabled: boolean; duration?: number } => {
+    const shouldCharacterFade = (charName: string): { enabled: boolean; duration?: number; animation?: AnimationType } => {
       if (!shouldUseFade) return { enabled: false };
       
       const characterFade = fadeAnimationConfig?.characterFade;
@@ -389,7 +447,8 @@ export class SceneRenderer {
         if (typeof charConfig === 'object' && charConfig !== null) {
           return { 
             enabled: charConfig.enabled, 
-            duration: charConfig.duration || fadeAnimationConfig?.duration 
+            duration: charConfig.duration || fadeAnimationConfig?.duration,
+            animation: charConfig.animation
           };
         }
       }
@@ -408,10 +467,18 @@ export class SceneRenderer {
           if (currentSprite !== newSprite) {
             const fadeConfig = shouldCharacterFade(charName);
             if (fadeConfig.enabled) {
+              const outAnimation = fadeConfig.animation ? 
+                (fadeConfig.animation.endsWith('In') ? 
+                  fadeConfig.animation.replace(/In$/, 'Out') as AnimationType : 
+                  'fadeOut' as AnimationType) : 
+                'fadeOut' as AnimationType;
+                
+              const inAnimation = fadeConfig.animation || 'fadeIn' as AnimationType;
+              
               this.fadeOutCharacter(charElement, () => {
                 charElement.style.backgroundImage = newSprite;
-                this.fadeInCharacter(charElement, fadeConfig.duration);
-              }, fadeConfig.duration);
+                this.fadeInCharacter(charElement, fadeConfig.duration, inAnimation);
+              }, fadeConfig.duration, outAnimation);
             } else {
               charElement.style.backgroundImage = newSprite;
             }

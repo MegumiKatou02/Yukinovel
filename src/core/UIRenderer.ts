@@ -330,8 +330,8 @@ export class UIRenderer {
     this.sceneRenderer.updateScene(scene);
   }
 
-  updateSceneWithFade(scene: Scene, shouldFadeBackground: boolean): void {
-    this.sceneRenderer.updateSceneWithFade(scene, shouldFadeBackground);
+  updateSceneWithFade(scene: Scene, shouldFadeBackground: boolean, backgroundAnimation?: any): void {
+    this.sceneRenderer.updateSceneWithFade(scene, shouldFadeBackground, backgroundAnimation);
   }
 
   updateDialogue(dialogue: DialogueEntry): void {

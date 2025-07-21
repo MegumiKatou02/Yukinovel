@@ -34,6 +34,49 @@ export interface Scene {
   dialogue: DialogueEntry[];
 }
 
+
+export type AnimationType = 
+  // Fading animations
+  | 'fadeIn' | 'fadeOut' 
+  | 'fadeInUp' | 'fadeOutUp'
+  | 'fadeInDown' | 'fadeOutDown'
+  | 'fadeInLeft' | 'fadeOutLeft'
+  | 'fadeInRight' | 'fadeOutRight'
+  // Sliding animations
+  | 'slideInUp' | 'slideOutUp'
+  | 'slideInDown' | 'slideOutDown'
+  | 'slideInLeft' | 'slideOutLeft'
+  | 'slideInRight' | 'slideOutRight'
+  // Zoom animations
+  | 'zoomIn' | 'zoomOut'
+  | 'zoomInUp' | 'zoomOutUp'
+  | 'zoomInDown' | 'zoomOutDown'
+  | 'zoomInLeft' | 'zoomOutLeft'
+  | 'zoomInRight' | 'zoomOutRight'
+  // Bouncing animations
+  | 'bounceIn' | 'bounceOut'
+  | 'bounceInUp' | 'bounceOutUp'
+  | 'bounceInDown' | 'bounceOutDown'
+  | 'bounceInLeft' | 'bounceOutLeft'
+  | 'bounceInRight' | 'bounceOutRight';
+
+export interface FadeAnimation {
+  enabled: boolean;
+  duration?: number;
+  backgroundFade?: boolean | {
+    enabled: boolean;
+    animation?: AnimationType;
+    duration?: number;
+  };
+  characterFade?: boolean | {
+    [characterName: string]: boolean | {
+      enabled: boolean;
+      animation?: AnimationType;
+      duration?: number;
+    }
+  };
+}
+
 // Dialogue types
 export interface DialogueEntry {
   character?: string;
@@ -45,13 +88,7 @@ export interface DialogueEntry {
   action?: 'jump' | 'end' | 'save' | 'load';
   target?: string;
   delay?: number;
-  
-  fadeAnimation?: {
-    enabled?: boolean;
-    duration?: number;
-    backgroundFade?: boolean;
-    characterFade?: boolean | { [characterName: string]: boolean | { enabled: boolean; duration?: number } };
-  };
+  fadeAnimation?: FadeAnimation;
 }
 
 export interface Choice {
