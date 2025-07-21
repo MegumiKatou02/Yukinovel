@@ -28,23 +28,28 @@ export class MainMenuRenderer {
     // Background setup
     this.setupBackground(config);
 
+    /**
+     * @description Không cần thiết lắm
+     */
     // Overlay
-    if (config.backgroundOverlay) {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: ${config.backgroundOverlay};
-        z-index: 1;
-      `;
-      this.mainMenuContainer.appendChild(overlay);
-    }
+    // if (config.backgroundOverlay) {
+    //   const overlay = document.createElement('div');
+    //   overlay.id = 'backgroundOverlay';
+    //   overlay.style.cssText = `
+    //     position: absolute;
+    //     top: 0;
+    //     left: 0;
+    //     width: 100%;
+    //     height: 100%;
+    //     background: ${config.backgroundOverlay};
+    //     z-index: 1;
+    //   `;
+    //   this.mainMenuContainer.appendChild(overlay);
+    // }
     
     // Main content container
     const contentContainer = document.createElement('div');
+    contentContainer.id = 'container-content';
     const layout = config.layout || {};
     const alignment = layout.alignment || 'center';
     const padding = layout.padding || 50;
@@ -144,6 +149,7 @@ export class MainMenuRenderer {
   private createTitle(container: HTMLElement, config: MainMenuConfig, alignment: string, langManager: any): void {
     const titleConfig = config.title || {};
     const titleDiv = document.createElement('div');
+    titleDiv.id = 'title-game';
     const titleText = langManager.getLocalizedText(titleConfig.text || this.game.getScript().title || 'Visual Novel');
     const titleColor = titleConfig.color || '#ffffff';
     const titleSize = titleConfig.fontSize || 48;
@@ -190,6 +196,7 @@ export class MainMenuRenderer {
     const subtitleConfig = config.subtitle || {};
     if (subtitleConfig.show !== false) {
       const subtitleDiv = document.createElement('div');
+      subtitleDiv.id = 'subtitle-game';
       const subtitleText = langManager.getLocalizedText(subtitleConfig.text || '') || langManager.getSubtitleText();
       
       subtitleDiv.style.cssText = `
@@ -205,6 +212,7 @@ export class MainMenuRenderer {
 
   private createButtons(container: HTMLElement, config: MainMenuConfig, langManager: any): void {
     const buttonsContainer = document.createElement('div');
+    buttonsContainer.id = 'container-button';
     const buttonConfig = config.buttons || {};
     const buttonSpacing = buttonConfig.spacing || 15;
     const buttonWidth = buttonConfig.width || 300;
@@ -236,6 +244,7 @@ export class MainMenuRenderer {
   private createMenuButton(text: string, action: () => void, icon: string, config: MainMenuConfig): HTMLElement {
     const buttonConfig = config.buttons || {};
     const button = document.createElement('button');
+    button.className = 'button';
     
     const style = buttonConfig.style || 'modern';
     const color = buttonConfig.color || '#4A90E2';
