@@ -1,48 +1,14 @@
 import { Game } from '../../src/index.js';
+import { languages } from './lang.js';
+import { settings } from './settings.js';
 
 const game = new Game({
     title: 'ATRI',
     author: 'Yukiookii',
     version: '1.0.0',
-    languages: [
-        { code: 'vi', name: 'Tiếng Việt', isDefault: true },
-        { code: 'en', name: 'English' },
-        { code: 'ja', name: '日本語' },
-        { code: 'fr', name: 'Français' }
-    ],
+    languages: languages.languages,
     localization: {
-    ui: {
-      'menu.start': {
-        vi: 'BẮT ĐẦU',
-        en: 'START',
-        ja: 'スタート',
-        fr: 'COMMENCER'
-      },
-      'menu.continue': {
-        vi: 'TIẾP TỤC',
-        en: 'CONTINUE',
-        ja: '続ける',
-        fr: 'CONTINUER'
-      },
-      'menu.settings': {
-        vi: 'CÀI ĐẶT',
-        en: 'SETTINGS',
-        ja: '設定',
-        fr: 'PARAMÈTRES'
-      },
-      'ui.version': {
-        vi: 'Phiên bản',
-        en: 'Version',
-        ja: 'バージョン',
-        fr: 'Version'
-      },
-      'ui.author': {
-        vi: 'Tác giả',
-        en: 'Author',
-        ja: '作者',
-        fr: 'Auteur'
-      }
-    },
+    ui: languages.ui,
     system: {
       'narrator.name': {
         vi: 'Người kể chuyện',
@@ -52,46 +18,7 @@ const game = new Game({
       }
     }
   },
-    settings: {
-        width: 'calc(100vw - 200px)',
-        height: 'calc(100vh - 30px)',
-        mainMenu: {
-            background: 'https://i.pinimg.com/1200x/3d/c2/19/3dc21940c02b371b8554fe011a3d21b0.jpg',
-            backgroundOverlay: 'rgba(0,0,0,0.3)',
-            title: {
-                text: 'Yukinovel',
-                color: '#ffffff',
-                fontSize: 72,
-                fontFamily: 'Arial, sans-serif',
-                shadow: true,
-                // gradient: 'linear-gradient(45deg, #b4ffb4ff, #c5ff8eff)',
-                // animation: 'glow'
-            },
-            subtitle: {
-                show: true,
-                text: '- Visual Novel in website -',
-                color: '#E0E0E0',
-                fontSize: 18,
-            },
-            buttons: {
-                style: 'minimal',
-                color: 'rgb(214, 255, 214)',
-                hoverColor: 'rgba(214, 255, 214, 0)',
-                textColor: '#ffffff',
-                fontSize: 16,
-                borderRadius: 12,
-                spacing: 12,
-                width: 250,
-                animation: 'bounce'
-            },
-            layout: {
-                alignment: 'left',
-                titlePosition: 'center',
-                buttonsPosition: 'center',
-                padding: 80
-            }
-        }
-    },
+    settings,
     characters: {
         'hero': {
             name: 'Linh',
@@ -119,12 +46,15 @@ const game = new Game({
         {
             id: 'opening',
             background: 'peak.jpg',
-            music: 'opening.mp3',
+            // backgroundVideo: 'anime.mp4',
+            // backgroundVideo: 'opening-video.mp4', // Ví dụ video background
+            // backgroundType: 'auto', // Tự động phát hiện loại file
+            // music: 'audio.mp3',
             characters: [
                 {
                     name: 'Linh',
                     color: '#4A90E2',
-                    image: null,
+                    // image: 'he.jpg',
                     position: {
                         x: 100,
                         y: 0,
@@ -151,8 +81,37 @@ const game = new Game({
                         en: 'he he he'
                     },
                     characterSprite: {
-                        Linh: 'he3.jpg',
+                        'Linh': 'he.jpg',
+                    },
+                    fadeAnimation: {
+                        enabled: true,
+                        characterFade: {
+                            'Linh': {
+                                enabled: true,
+                                animation: 'fadeIn',
+                                duration: 350
+                            },
+                                
+                        }
                     }
+                },
+                {
+                    character: 'narrator',
+                    text: 'Chào mừng đến với <strong>Visual Novel</strong>! Bạn có thể sử dụng các icon như <i class="fas fa-arrow-left"></i> để quay lại, <i class="fas fa-save"></i> để lưu game, hoặc <i class="fas fa-heart" style="color: red;"></i> để thể hiện tình cảm.',
+                    fadeAnimation: {
+                        enabled: true,
+                        characterFade: {
+                            'Linh': {
+                                enabled: true,
+                                animation: 'fadeOut',
+                                duration: 1000
+                            },
+                        }
+                    }
+                },
+                {
+                    character: 'narrator',
+                    text: 'Nút <span class="fas fa-arrow-left" style="background: #333; color: white; padding: 5px 8px; border-radius: 3px; margin: 0 5px;"></span> là nút quay lại, nhấn vào để trở về trạng thái trước đó của game.',
                 },
                 {
                     character: 'narrator',
@@ -165,6 +124,10 @@ const game = new Game({
                 {
                     character: 'hero',
                     text: 'Cuối cùng tôi cũng đến được đây! Theo truyền thuyết, viên ngọc sẽ ở một trong những nơi này.'
+                },
+                {
+                    character: 'hero',
+                    text: 'Hệ thống điều khiển: <br/><span style="background: #4CAF50; color: white; padding: 3px 8px; border-radius: 3px; margin: 2px;"><i class="fas fa-mouse"></i> Click</span> hoặc <span style="background: #2196F3; color: white; padding: 3px 8px; border-radius: 3px; margin: 2px;"><i class="fas fa-keyboard"></i> Space/Enter</span> để tiếp tục<br/>Sử dụng <span style="background: #FF9800; color: white; padding: 3px 8px; border-radius: 3px; margin: 2px;"><i class="fas fa-save"></i> S</span> để lưu và <span style="background: #9C27B0; color: white; padding: 3px 8px; border-radius: 3px; margin: 2px;"><i class="fas fa-folder-open"></i> L</span> để load game.'
                 },
                 {
                     character: 'hero',
@@ -184,19 +147,42 @@ const game = new Game({
                             text: 'Khám phá hang động trên núi',
                             action: 'jump',
                             target: 'cave'
+                        },
+                        {
+                            text: '[Demo] Xem video background',
+                            action: 'jump',
+                            target: 'video_demo'
+                        },
+                        {
+                            text: '[Demo] Xem GIF background',
+                            action: 'jump',
+                            target: 'gif_demo'
+                        },
+                        {
+                            text: '[Demo] Xem Fade Animation',
+                            action: 'jump',
+                            target: 'fade_demo'
                         }
-                    ]
+                    ],
+                    fadeAnimation: {
+                        enabled: true,
+                        backgroundFade: true,
+                        characterFade: true,
+                        duration: 600
+                    }
                 }
             ]
         },
         {
             id: 'forest',
             background: 'peak.jpg',
+            // background: 'forest-animated.gif',
+            // backgroundType: 'gif',
             music: 'forest.mp3',
             characters: [
                 {
                     name: 'Linh',
-                    image: 'he.jpg',
+                    // image: 'he.jpg',
                     color: '#4A90E2',
                     position: {
                         x: 50,
@@ -208,7 +194,7 @@ const game = new Game({
                 },
                 {
                     name: 'Rồng Lửa',
-                    image: 'he2.jpg',
+                    // image: 'he2.jpg',
                     color: '#E74C3C',
                     position: {
                         x: 600,
@@ -222,7 +208,17 @@ const game = new Game({
             dialogue: [
                 {
                     character: 'narrator',
-                    text: 'Linh bước vào khu rừng rậm rạp. Ánh sáng mặt trời lọt qua tán lá tạo nên những đốm sáng lung linh.'
+                    text: 'Linh bước vào khu rừng rậm rạp. Ánh sáng mặt trời lọt qua tán lá tạo nên những đốm sáng lung linh.',
+                    fadeAnimation: {
+                        enabled: true,
+                        // backgroundFade: true,
+                        characterFade: true,
+                        duration: 300
+                    },
+                    characterSprite: {
+                        'Linh': 'he.jpg',
+                        'Rồng Lửa': 'he2.jpg'
+                    }
                 },
                 {
                     character: 'hero',
@@ -616,6 +612,184 @@ const game = new Game({
                     ]
                 }
             ]
+        },
+        {
+            id: 'video_demo',
+            backgroundVideo: 'demo-video.mp4', // Video background
+            backgroundType: 'video',
+            dialogue: [
+                {
+                    character: 'narrator',
+                    text: 'Đây là scene demo với video background. Video sẽ tự động phát và lặp lại.'
+                },
+                {
+                    character: 'hero',
+                    text: 'Tuyệt vời! Background có thể là video hoặc GIF animated.',
+                    choices: [
+                        {
+                            text: 'Quay lại scene chính',
+                            action: 'jump',
+                            target: 'opening'
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'gif_demo',
+            background: 'animated-scene.gif',
+            backgroundType: 'gif',
+            dialogue: [
+                {
+                    character: 'narrator',
+                    text: 'Scene này sử dụng GIF làm background để tạo hiệu ứng chuyển động.'
+                },
+                {
+                    character: 'hero',
+                    text: 'GIF rất phù hợp cho những hiệu ứng đơn giản và nhẹ.',
+                    choices: [
+                        {
+                            text: 'Thử scene với video',
+                            action: 'jump',
+                            target: 'video_demo'
+                        },
+                        {
+                            text: 'Quay lại scene chính',
+                            action: 'jump',
+                            target: 'opening'
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'fade_demo',
+            background: 'peak.jpg',
+            music: 'forest.mp3',
+            characters: [
+                {
+                    name: 'Linh',
+                    image: 'he.jpg',
+                    color: '#4A90E2',
+                    position: {
+                        x: 100,
+                        y: 0,
+                        width: 300,
+                        height: 400,
+                        scale: 1.0
+                    }
+                },
+                {
+                    name: 'Rồng Lửa',
+                    image: 'he2.jpg',
+                    color: '#E74C3C',
+                    position: {
+                        x: 'calc(60%)',
+                        y: 0,
+                        width: 350,
+                        height: 450,
+                        scale: 1.2
+                    }
+                }
+            ],
+            dialogue: [
+                {
+                    character: 'narrator',
+                    text: 'Đây là scene demo với <strong>fade animation</strong> cho background và characters.'
+                },
+                {
+                    character: 'hero',
+                    text: 'Khi bạn chuyển scene, background và characters sẽ <em>fade out/in</em> một cách mượt mà.',
+                    characterSprite: {
+                        'Linh': 'he3.jpg',
+                        'Rồng Lửa': 'he.jpg'
+                    },
+                    fadeAnimation: {
+                        enabled: true,
+                        characterFade: {
+                            'Linh': { 
+                                enabled: true,
+                                animation: 'fadeInLeft'
+                            },
+                            'Rồng Lửa': { 
+                                enabled: true,
+                                animation: 'fadeInRight'
+                            }
+                        },
+                        duration: 800
+                    }
+                },
+                {
+                    character: 'hero',
+                    text: 'Bạn có thể sử dụng nhiều hiệu ứng khác nhau. <i class="fas fa-magic" style="color: purple;"></i>',
+                    characterSprite: {
+                        'Linh': 'he2.jpg',
+                        'Rồng Lửa': 'he2.jpg'
+                    },
+                    fadeAnimation: {
+                        enabled: true,
+                        characterFade: {
+                            'Linh': { 
+                                enabled: true,
+                                animation: 'zoomIn',
+                                duration: 500
+                            },
+                            'Rồng Lửa': { 
+                                enabled: true,
+                                animation: 'bounceIn',
+                                duration: 800
+                            }
+                        }
+                    }
+                },
+                {
+                    character: 'narrator',
+                    text: 'Thậm chí có thể kết hợp nhiều hiệu ứng khác nhau!',
+                    characterSprite: {
+                        'Linh': 'he.jpg',
+                        'Rồng Lửa': null
+                    },
+                    fadeAnimation: {
+                        enabled: true,
+                        characterFade: {
+                            'Linh': { 
+                                enabled: true,
+                                animation: 'slideInUp',
+                                duration: 300
+                            },
+                            'Rồng Lửa': { 
+                                enabled: true,
+                                animation: 'zoomOutDown',
+                                duration: 1000
+                            }
+                        }
+                    }
+                },
+                {
+                    character: 'narrator',
+                    text: 'Animate.css cung cấp rất nhiều hiệu ứng đẹp mắt!',
+                    choices: [
+                        {
+                            text: 'Quay lại scene chính',
+                            action: 'jump',
+                            target: 'opening'
+                        },
+                        {
+                            text: 'Thử scene khác',
+                            action: 'jump',
+                            target: 'forest'
+                        }
+                    ],
+                    fadeAnimation: {
+                        enabled: true,
+                        backgroundFade: {
+                            enabled: true,
+                            animation: 'fadeOutDown',
+                            duration: 700
+                        }
+                    }
+                }
+            ]
         }
     ]
 });
@@ -639,6 +813,9 @@ game.on('load', (_event) => {
 game.on('end', (_event) => {
     console.log('Game ended');
 });
+
+// Cấu hình fade animation (tùy chọn)
+// game.getUIRenderer().getSceneRenderer().setFadeAnimationDuration(800); // 800ms fade để thấy rõ effect
 
 game.mount('#game-container');
 

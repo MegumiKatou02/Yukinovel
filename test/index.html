@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visual Novel Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         * {
             user-select: none;
@@ -31,6 +33,23 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             overflow: hidden;
             /* border: 3px solid #fff; */
+        }
+
+        /* Đảm bảo animate.css hoạt động đúng */
+        .character-element {
+            animation-fill-mode: both !important;
+        }
+
+        /* Override animate.css để tránh conflict */
+        .character-element.animate__animated {
+            animation-duration: var(--animate-duration) !important;
+            animation-fill-mode: both !important;
+        }
+
+        /* Đảm bảo background element cũng animate đúng */
+        #background-game.animate__animated {
+            animation-duration: var(--animate-duration) !important;
+            animation-fill-mode: both !important;
         }
     </style>
 </head>
