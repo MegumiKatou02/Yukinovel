@@ -14,6 +14,10 @@ export class DialogueRenderer {
   private currentCharacterName: string = '';
   private currentCharacterColor: string = '#fff';
   private justSkippedTyping: boolean = false;
+  
+  private htmlNodes: Array<{type: 'text' | 'html', content: string}> = [];
+  private currentNodeIndex: number = 0;
+  private currentTextIndex: number = 0;
 
   constructor(game: Game, dialogueContainer: HTMLElement, choicesContainer: HTMLElement) {
     this.game = game;
@@ -32,6 +36,8 @@ export class DialogueRenderer {
     this.currentDialogueText = localizedText;
     this.currentCharacterName = character ? character.name : '';
     this.currentCharacterColor = character ? character.color || '#fff' : '#fff';
+    
+    this.parseHtmlContent(localizedText);
     
     this.startTypewriter();
     
@@ -95,35 +101,106 @@ export class DialogueRenderer {
     return this.typewriterSpeed;
   }
 
+  private parseHtmlContent(htmlText: string): void {
+    this.htmlNodes = [];
+    this.currentNodeIndex = 0;
+    this.currentTextIndex = 0;
+    
+    const htmlRegex = /<[^>]+>/g;
+    let lastIndex = 0;
+    let match;
+    
+    while ((match = htmlRegex.exec(htmlText)) !== null) {
+      if (match.index > lastIndex) {
+        const textContent = htmlText.substring(lastIndex, match.index);
+        if (textContent) {
+          this.htmlNodes.push({type: 'text', content: textContent});
+        }
+      }
+      
+      this.htmlNodes.push({type: 'html', content: match[0]});
+      lastIndex = match.index + match[0].length;
+    }
+    
+    if (lastIndex < htmlText.length) {
+      const textContent = htmlText.substring(lastIndex);
+      if (textContent) {
+        this.htmlNodes.push({type: 'text', content: textContent});
+      }
+    }
+    
+    if (this.htmlNodes.length === 0) {
+      this.htmlNodes.push({type: 'text', content: htmlText});
+    }
+  }
+
   // Typewriter effect methods
   private startTypewriter(): void {
     this.isTyping = true;
     this.justSkippedTyping = false;
     this.dialogueContainer.style.display = 'block';
-    this.typeText('', 0);
+    this.currentNodeIndex = 0;
+    this.currentTextIndex = 0;
+    this.typeHtmlText();
   }
 
-  private typeText(currentText: string, index: number): void {
-    if (index >= this.currentDialogueText.length) {
+  private typeHtmlText(): void {
+    if (this.currentNodeIndex >= this.htmlNodes.length) {
       this.isTyping = false;
       return;
     }
 
-    const nextChar = this.currentDialogueText[index];
-    const newText = currentText + nextChar;
+    const currentNode = this.htmlNodes[this.currentNodeIndex];
+    
+    if (currentNode.type === 'html') {
+      this.currentNodeIndex++;
+      this.currentTextIndex = 0;
+      this.updateDialogueDisplay();
+      this.currentTypewriterTimeout = window.setTimeout(() => {
+        this.typeHtmlText();
+      }, 1);
+    } else {
+      if (this.currentTextIndex >= currentNode.content.length) {
+        this.currentNodeIndex++;
+        this.currentTextIndex = 0;
+        this.currentTypewriterTimeout = window.setTimeout(() => {
+          this.typeHtmlText();
+        }, this.typewriterSpeed);
+      } else {
+        this.currentTextIndex++;
+        this.updateDialogueDisplay();
+        this.currentTypewriterTimeout = window.setTimeout(() => {
+          this.typeHtmlText();
+        }, this.typewriterSpeed);
+      }
+    }
+  }
+
+  private updateDialogueDisplay(): void {
+    let displayText = '';
+    
+    for (let i = 0; i <= this.currentNodeIndex; i++) {
+      const node = this.htmlNodes[i];
+      if (!node) break;
+      
+      if (i < this.currentNodeIndex) {
+        displayText += node.content;
+      } else if (i === this.currentNodeIndex) {
+        if (node.type === 'html') {
+          displayText += node.content;
+        } else {
+          displayText += node.content.substring(0, this.currentTextIndex);
+        }
+      }
+    }
     
     let html = '';
     if (this.currentCharacterName) {
       html += `<div style="color: ${this.currentCharacterColor}; font-weight: bold; margin-bottom: 10px;">${this.currentCharacterName}</div>`;
     }
-    html += `<div style="font-size: 18px; line-height: 1.4;">${newText}</div>`;
+    html += `<div style="font-size: 18px; line-height: 1.4;">${displayText}</div>`;
     
     this.dialogueContainer.innerHTML = html;
-    
-    // Đệ quy
-    this.currentTypewriterTimeout = window.setTimeout(() => {
-      this.typeText(newText, index + 1);
-    }, this.typewriterSpeed);
   }
 
   private stopTyping(): void {
