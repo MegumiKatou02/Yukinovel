@@ -330,6 +330,10 @@ export class UIRenderer {
     this.sceneRenderer.updateScene(scene);
   }
 
+  updateSceneWithFade(scene: Scene, shouldFadeBackground: boolean): void {
+    this.sceneRenderer.updateSceneWithFade(scene, shouldFadeBackground);
+  }
+
   updateDialogue(dialogue: DialogueEntry): void {
     this.dialogueRenderer.updateDialogue(dialogue);
     this.sceneRenderer.updateCharacterSprites(dialogue);
@@ -345,6 +349,10 @@ export class UIRenderer {
 
   setTypewriterSpeed(speed: number): void {
     this.dialogueRenderer.setTypewriterSpeed(speed);
+  }
+
+  getSceneRenderer(): SceneRenderer {
+    return this.sceneRenderer;
   }
 
   showCredits(): void {

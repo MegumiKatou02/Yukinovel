@@ -64,7 +64,7 @@ export class Game {
   }
 
   // Scene management
-  private startScene(sceneId: string): void {
+  startScene(sceneId: string, fadeOptions?: { backgroundFade?: boolean }): void {
     const scene = this.script.scenes.find(s => s.id === sceneId);
     if (!scene) {
       console.error(`Scene "${sceneId}" not found`);
@@ -73,15 +73,17 @@ export class Game {
 
     this.state.currentScene = sceneId;
     this.state.currentDialogue = 0;
-    this.currentSceneDialogueHistory = []; // Reset lịch sử dialogue khi chuyển scene
+    this.currentSceneDialogueHistory = [];
 
-    // Load background music
     if (scene.music) {
       this.audioManager.playMusic(scene.music);
     }
 
-    // Update UI
-    this.uiRenderer.updateScene(scene);
+    if (fadeOptions?.backgroundFade) {
+      this.uiRenderer.updateSceneWithFade(scene, true);
+    } else {
+      this.uiRenderer.updateScene(scene);
+    }
     this.showDialogue();
 
     this.emit('scene', { scene });
@@ -161,10 +163,17 @@ export class Game {
   }
 
   private handleAction(action: string, target?: string): void {
+    const currentScene = this.getCurrentScene();
+    const currentDialogue = currentScene?.dialogue[this.state.currentDialogue];
+    
     switch (action) {
       case 'jump':
         if (target) {
-          this.startScene(target);
+          const fadeOptions = {
+            backgroundFade: currentDialogue?.fadeAnimation?.enabled === true && 
+                          currentDialogue?.fadeAnimation?.backgroundFade !== false
+          };
+          this.startScene(target, fadeOptions);
         }
         break;
       case 'end':
@@ -190,12 +199,11 @@ export class Game {
     const savedState = this.saveManager.load(slot);
     if (savedState) {
       this.state = savedState;
-      this.startScene(this.state.currentScene);
+      this.startScene(this.state.currentScene, { backgroundFade: true });
       this.emit('load', { slot });
     }
   }
 
-  // Main menu methods
   showMainMenu(): void {
     this.uiRenderer.showMainMenu();
   }
@@ -210,7 +218,7 @@ export class Game {
 
   continueGame(): void {
     this.uiRenderer.hideMainMenu();
-    this.startScene(this.state.currentScene);
+    this.startScene(this.state.currentScene, { backgroundFade: true });
   }
 
   // Event system

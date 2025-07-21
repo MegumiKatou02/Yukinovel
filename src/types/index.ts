@@ -45,6 +45,13 @@ export interface DialogueEntry {
   action?: 'jump' | 'end' | 'save' | 'load';
   target?: string;
   delay?: number;
+  
+  fadeAnimation?: {
+    enabled?: boolean;
+    duration?: number;
+    backgroundFade?: boolean;
+    characterFade?: boolean | { [characterName: string]: boolean | { enabled: boolean; duration?: number } };
+  };
 }
 
 export interface Choice {
