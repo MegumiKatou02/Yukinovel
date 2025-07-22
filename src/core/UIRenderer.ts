@@ -300,9 +300,6 @@ export class UIRenderer {
       } else if (e.code === 'Escape') {
         e.preventDefault();
         this.modalRenderer.showExitConfirm();
-      } else if (e.code === 'Backspace') {
-        e.preventDefault();
-        this.game.back();
       } else if (e.code === 'KeyS') {
         e.preventDefault();
         this.game.saveGame();

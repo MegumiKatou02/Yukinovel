@@ -7,8 +7,8 @@ export interface Character {
   position?: {
     x?: number | string;
     y?: number | string;
-    width?: number;
-    height?: number;
+    width?: number | string;
+    height?: number | string;
     scale?: number;
   };
 }

@@ -126,19 +126,16 @@ export class Game {
     const dialogue = currentScene.dialogue[this.state.currentDialogue];
     if (!dialogue) return;
 
-    // Handle dialogue actions
     if (dialogue.action) {
       this.handleAction(dialogue.action, dialogue.target);
       return;
     }
 
-    // Check if there are choices
     if (dialogue.choices && dialogue.choices.length > 0) {
       this.uiRenderer.showChoices(dialogue.choices);
       return;
     }
 
-    // Move to next dialogue
     this.state.currentDialogue++;
     if (this.state.currentDialogue >= currentScene.dialogue.length) {
       this.emit('end', {});
@@ -148,15 +145,6 @@ export class Game {
     this.showDialogue();
   }
 
-  // Khong dung nua
-  back(): void {
-    if (this.state.currentDialogue > 0) {
-      this.state.currentDialogue--;
-      this.showDialogue();
-    }
-  }
-
-  // Handle user choice
   makeChoice(choice: Choice): void {
     this.state.history.push(`Choice: ${choice.text}`);
     this.handleAction(choice.action, choice.target);
@@ -263,7 +251,6 @@ export class Game {
     return this.script;
   }
 
-  // Language Manager access methods
   getLanguageManager(): LanguageManager {
     return this.languageManager;
   }
@@ -274,7 +261,6 @@ export class Game {
 
   setLanguage(languageCode: string): void {
     this.languageManager.setLanguage(languageCode);
-    // Note: UI refresh will be handled by individual UI components
   }
 
   getAvailableLanguages() {

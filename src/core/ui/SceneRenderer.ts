@@ -352,8 +352,8 @@ export class SceneRenderer {
       charElement.style.position = 'absolute';
       charElement.style.bottom = yValue;
       charElement.style.left = xValue;
-      charElement.style.width = `${width}px`;
-      charElement.style.height = `${height}px`;
+      charElement.style.width = typeof width === 'string' ? width : `${width}px`;
+      charElement.style.height = typeof height === 'string' ? height : `${height}px`;
       charElement.style.backgroundImage = `url(${character.image || ''})`;
       charElement.style.backgroundSize = 'contain';
       charElement.style.backgroundPosition = 'bottom';
