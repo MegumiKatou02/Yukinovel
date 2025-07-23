@@ -17,6 +17,15 @@ export class MainMenuRenderer {
 
   hide(): void {
     this.mainMenuContainer.style.display = 'none';
+    this.cleanupBackgroundElements();
+  }
+
+  private cleanupBackgroundElements(): void {
+    const backgroundVideos = document.body.querySelectorAll('video[style*="position: fixed"][style*="z-index: -1"]');
+    backgroundVideos.forEach(video => video.remove());
+    
+    const backgroundOverlays = document.body.querySelectorAll('div[style*="position: fixed"][style*="z-index: -1"]');
+    backgroundOverlays.forEach(overlay => overlay.remove());
   }
 
   private createMainMenu(): void {
@@ -25,7 +34,6 @@ export class MainMenuRenderer {
     const config = this.game.getScript().settings?.mainMenu || {};
     const langManager = this.game.getLanguageManager();
     
-    // Background setup
     this.setupBackground(config);
 
     /**
@@ -90,14 +98,17 @@ export class MainMenuRenderer {
       
       if (backgroundType === 'video') {
         const video = this.setupBackgroundVideo(backgroundUrl);
-        video.style.position = 'absolute';
-        video.style.top = '0';
-        video.style.left = '0';
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.style.zIndex = '0';
-        this.mainMenuContainer.appendChild(video);
+        video.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          object-fit: cover;
+          z-index: 0;
+          pointer-events: none;
+        `;
+        document.body.appendChild(video);
         backgroundStyle = 'background: transparent;';
       } else {
         backgroundStyle = `
@@ -105,6 +116,7 @@ export class MainMenuRenderer {
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
+          background-attachment: fixed;
         `;
       }
     }
@@ -271,7 +283,6 @@ export class MainMenuRenderer {
       box-sizing: border-box;
     `;
     
-    // Style variations
     if (style === 'glass') {
       buttonStyle += `
         background: rgba(255,255,255,0.1);
@@ -349,128 +360,112 @@ export class MainMenuRenderer {
   private showSettings(menuOverlay: HTMLElement): void {
     const langManager = this.game.getLanguageManager();
     const config = this.game.getScript().settings?.mainMenu || {};
+    const settingsConfig = config.settings || {};
+    
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+      const fontAwesome = document.createElement('link');
+      fontAwesome.rel = 'stylesheet';
+      fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+      document.head.appendChild(fontAwesome);
+    }
     
     const settingsContainer = document.createElement('div');
     settingsContainer.id = 'settings-container';
-    
-    this.setupSettingsBackground(settingsContainer, config);
-
-    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
-    
-    if (config.backgroundColor) {
-      backgroundStyle = `background: ${config.backgroundColor};`;
-    }
-    
-    if (config.background) {
-      backgroundStyle = `
-        background-image: url('${config.background}');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-      `;
-    }
-    
     settingsContainer.style.cssText = `
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      ${backgroundStyle}
-      color: white;
-      overflow-y: auto;
-      pointer-events: auto;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(22, 33, 62, 0.95) 50%, rgba(15, 52, 96, 0.95) 100%);
+      backdrop-filter: blur(10px);
       z-index: 1000;
+      overflow-y: auto;
+      color: white;
     `;
 
-    if (config.backgroundOverlay) {
-      const overlay = document.createElement('div');
-      overlay.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: ${config.backgroundOverlay};
-        z-index: 1;
-      `;
-      settingsContainer.appendChild(overlay);
-    }
+    this.setupSettingsBackground(settingsContainer, settingsConfig, config);
 
-    // Main content container
-    const contentContainer = document.createElement('div');
-    contentContainer.style.cssText = `
-      position: relative;
-      z-index: 2;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 60px 40px;
-      min-height: 100vh;
+    const mainWrapper = document.createElement('div');
+    mainWrapper.style.cssText = `
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      position: relative;
+      z-index: 1001;
     `;
 
-    // Header section
-    const headerSection = document.createElement('div');
-    headerSection.style.cssText = `
+    const header = document.createElement('div');
+    header.style.cssText = `
       text-align: center;
-      margin-bottom: 60px;
+      margin-bottom: 50px;
+      width: 100%;
+      max-width: 800px;
     `;
 
-    const settingsTitle = document.createElement('h1');
-    settingsTitle.textContent = langManager.getText('menu.settings');
-    settingsTitle.style.cssText = `
-      font-size: 42px;
+    const title = document.createElement('h1');
+    title.textContent = langManager.getText('menu.settings');
+    title.style.cssText = `
+      font-size: clamp(32px, 5vw, 48px);
       font-weight: bold;
       margin: 0 0 15px 0;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-      color: white;
+      color: #ffd700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     `;
 
-    const settingsSubtitle = document.createElement('p');
-    settingsSubtitle.textContent = langManager.getText('settings.subtitle', 'Tùy chỉnh trải nghiệm game của bạn');
-    settingsSubtitle.style.cssText = `
-      font-size: 16px;
+    const subtitle = document.createElement('p');
+    subtitle.textContent = langManager.getText('settings.subtitle', 'Tùy chỉnh trải nghiệm game của bạn');
+    subtitle.style.cssText = `
+      font-size: clamp(14px, 2.5vw, 18px);
       margin: 0;
       opacity: 0.9;
-      color: #f0f0f0;
+      color: #e0e0e0;
     `;
 
-    headerSection.appendChild(settingsTitle);
-    headerSection.appendChild(settingsSubtitle);
-    contentContainer.appendChild(headerSection);
+    header.appendChild(title);
+    header.appendChild(subtitle);
+    mainWrapper.appendChild(header);
 
-    // Settings sections container
-    const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.cssText = `
+    const settingsContent = document.createElement('div');
+    settingsContent.style.cssText = `
+      width: 100%;
+      max-width: 900px;
       display: flex;
       flex-direction: column;
-      gap: 30px;
-      flex: 1;
-      margin-bottom: 40px;
+      gap: 35px;
+      margin-bottom: 50px;
     `;
 
-    // Language Settings Section
     const languageSection = this.createSimpleSettingsSection(
-      langManager.getText('settings.language'),
-      langManager.getText('settings.language.desc'),
-      'lang'
+      'fas fa-globe', 
+      langManager.getText('settings.language', 'Ngôn ngữ'),
+      langManager.getText('settings.language.desc', 'Chọn ngôn ngữ hiển thị')
     );
+
+    const languageControl = document.createElement('div');
+    languageControl.style.cssText = `
+      margin-top: 15px;
+    `;
 
     const languageSelect = document.createElement('select');
     languageSelect.style.cssText = `
       width: 100%;
-      padding: 12px 16px;
+      max-width: 350px;
+      padding: 15px 20px;
       font-size: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255,255,255,0.2);
       border-radius: 8px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.4);
       color: white;
       cursor: pointer;
-      transition: all 0.3s ease;
+      outline: none;
     `;
 
-    // Language options
     const availableLanguages = this.game.getAvailableLanguages();
     const currentLanguage = this.game.getCurrentLanguage();
 
@@ -478,10 +473,7 @@ export class MainMenuRenderer {
       const option = document.createElement('option');
       option.value = lang.code;
       option.textContent = lang.name;
-      option.style.cssText = `
-        background: #333;
-        color: white;
-      `;
+      option.style.cssText = `background: #2a2a2a; color: white;`;
       if (lang.code === currentLanguage) {
         option.selected = true;
       }
@@ -493,28 +485,23 @@ export class MainMenuRenderer {
       this.game.setLanguage(target.value);
     });
 
-    languageSelect.addEventListener('focus', () => {
-      languageSelect.style.borderColor = 'rgba(255,255,255,0.6)';
-      languageSelect.style.background = 'rgba(0,0,0,0.5)';
-    });
+    languageControl.appendChild(languageSelect);
+    languageSection.appendChild(languageControl);
+    settingsContent.appendChild(languageSection);
 
-    languageSelect.addEventListener('blur', () => {
-      languageSelect.style.borderColor = 'rgba(255,255,255,0.3)';
-      languageSelect.style.background = 'rgba(0,0,0,0.3)';
-    });
-
-    languageSection.appendChild(languageSelect);
-    sectionsContainer.appendChild(languageSection);
-
-    // Text Speed Settings Section
-    const textSpeedSection = this.createSimpleSettingsSection(
-      langManager.getText('settings.textSpeed'),
-      langManager.getText('settings.textSpeed.desc'),
-      'speed'
+    const speedSection = this.createSimpleSettingsSection(
+      'fas fa-tachometer-alt', 
+      langManager.getText('settings.textSpeed', 'Tốc độ text'),
+      langManager.getText('settings.textSpeed.desc', 'Điều chỉnh tốc độ hiển thị văn bản')
     );
 
-    const speedContainer = document.createElement('div');
-    speedContainer.style.cssText = `
+    const speedControl = document.createElement('div');
+    speedControl.style.cssText = `
+      margin-top: 15px;
+    `;
+
+    const sliderContainer = document.createElement('div');
+    sliderContainer.style.cssText = `
       display: flex;
       align-items: center;
       gap: 20px;
@@ -523,30 +510,31 @@ export class MainMenuRenderer {
 
     const speedSlider = document.createElement('input');
     speedSlider.type = 'range';
-    speedSlider.min = '10';
+    speedSlider.min = '5';
     speedSlider.max = '100';
     speedSlider.value = this.game.getUIRenderer().getTypewriterSpeed().toString();
     speedSlider.style.cssText = `
       flex: 1;
       height: 6px;
       border-radius: 3px;
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.2);
       outline: none;
       cursor: pointer;
       -webkit-appearance: none;
     `;
 
-    const speedValue = document.createElement('span');
+    const speedValue = document.createElement('div');
     speedValue.textContent = this.game.getUIRenderer().getTypewriterSpeed() + 'ms';
     speedValue.style.cssText = `
-      min-width: 60px;
+      min-width: 70px;
       text-align: center;
       font-weight: bold;
       color: white;
-      background: rgba(0,0,0,0.3);
+      background: rgba(74, 144, 226, 0.3);
       padding: 8px 12px;
       border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.3);
+      border: 1px solid rgba(74, 144, 226, 0.5);
+      font-size: 14px;
     `;
 
     speedSlider.addEventListener('input', (e) => {
@@ -556,82 +544,72 @@ export class MainMenuRenderer {
       speedValue.textContent = value + 'ms';
     });
 
-    speedContainer.appendChild(speedSlider);
-    speedContainer.appendChild(speedValue);
+    sliderContainer.appendChild(speedSlider);
+    sliderContainer.appendChild(speedValue);
 
-    // Speed presets
-    const speedPresets = document.createElement('div');
-    speedPresets.style.cssText = `
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+    const presetsContainer = document.createElement('div');
+    presetsContainer.style.cssText = `
+      display: flex;  
+      gap: 12px;
+      max-width: 500px;
     `;
 
     const presets = [
-      { label: langManager.getText('ui.slow'), value: 60 },
-      { label: langManager.getText('ui.normal'), value: 30 },
-      { label: langManager.getText('ui.fast'), value: 15 },
-      { label: langManager.getText('ui.veryfast'), value: 5 }
+      { label: langManager.getText('ui.slow', 'Chậm'), value: 60 },
+      { label: langManager.getText('ui.normal', 'Bình thường'), value: 20 },
+      { label: langManager.getText('ui.fast', 'Nhanh'), value: 15 },
+      { label: langManager.getText('ui.veryfast', 'Rất nhanh'), value: 5 }
     ];
 
     presets.forEach(preset => {
-      const presetButton = document.createElement('button');
-      presetButton.textContent = preset.label;
-      presetButton.style.cssText = `
-        padding: 8px 16px;
-        border: 1px solid rgba(255,255,255,0.4);
+      const presetBtn = document.createElement('button');
+      presetBtn.textContent = preset.label;
+      presetBtn.style.cssText = `
+        padding: 10px 20px;
+        border: 1px solid rgba(255,255,255,0.3);
         border-radius: 6px;
         background: rgba(0,0,0,0.3);
         color: white;
         cursor: pointer;
-        transition: all 0.3s ease;
         font-size: 14px;
+        font-weight: 500;
       `;
 
-      presetButton.addEventListener('click', () => {
+      presetBtn.addEventListener('click', () => {
         this.game.getUIRenderer().setTypewriterSpeed(preset.value);
         speedSlider.value = preset.value.toString();
         speedValue.textContent = preset.value + 'ms';
       });
 
-      presetButton.addEventListener('mouseenter', () => {
-        presetButton.style.background = 'rgba(255,255,255,0.2)';
-        presetButton.style.borderColor = 'rgba(255,255,255,0.6)';
-      });
-
-      presetButton.addEventListener('mouseleave', () => {
-        presetButton.style.background = 'rgba(0,0,0,0.3)';
-        presetButton.style.borderColor = 'rgba(255,255,255,0.4)';
-      });
-
-      speedPresets.appendChild(presetButton);
+      presetsContainer.appendChild(presetBtn);
     });
 
-    textSpeedSection.appendChild(speedContainer);
-    textSpeedSection.appendChild(speedPresets);
-    sectionsContainer.appendChild(textSpeedSection);
+    speedControl.appendChild(sliderContainer);
+    speedControl.appendChild(presetsContainer);
+    speedSection.appendChild(speedControl);
+    settingsContent.appendChild(speedSection);
 
-    // Keyboard Shortcuts Section
     const shortcutsSection = this.createSimpleSettingsSection(
+      'fas fa-keyboard', 
       langManager.getText('settings.shortcuts', 'Phím tắt'),
-      langManager.getText('settings.shortcuts.desc'),
-      'keys'
+      langManager.getText('settings.shortcuts.desc', 'Danh sách các phím tắt hữu ích')
     );
 
-    const shortcutsList = document.createElement('div');
-    shortcutsList.style.cssText = `
+    const shortcutsGrid = document.createElement('div');
+    shortcutsGrid.style.cssText = `
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
     `;
 
     const shortcuts = [
-      { key: 'Space / Enter', action: langManager.getText('ui.next') },
-      { key: 'Esc', action: langManager.getText('ui.home') },
-      { key: 'S', action: langManager.getText('ui.save') },
-      { key: 'L', action: langManager.getText('ui.load') },
-      { key: 'H', action: langManager.getText('ui.history') },
-      { key: 'Esc', action: langManager.getText('ui.menu', 'Menu') }
+      { key: 'Space / Enter', action: langManager.getText('ui.next', 'Tiếp tục') },
+      { key: 'Esc', action: langManager.getText('ui.home', 'Về menu') },
+      { key: 'S', action: langManager.getText('ui.save', 'Lưu game') },
+      { key: 'L', action: langManager.getText('ui.load', 'Tải game') },
+      { key: 'H', action: langManager.getText('ui.history', 'Lịch sử') },
+      { key: 'M', action: langManager.getText('ui.menu', 'Menu') }
     ];
 
     shortcuts.forEach(shortcut => {
@@ -639,117 +617,102 @@ export class MainMenuRenderer {
       shortcutItem.style.cssText = `
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
+        gap: 15px;
+        padding: 12px;
         background: rgba(0,0,0,0.3);
-        border-radius: 6px;
-        border: 1px solid rgba(255,255,255,0.2);
-        transition: all 0.3s ease;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.15);
       `;
 
-      const keyElement = document.createElement('span');
-      keyElement.textContent = shortcut.key;
-      keyElement.style.cssText = `
-        background: rgba(255,255,255,0.2);
-        padding: 4px 8px;
+      const keyBadge = document.createElement('span');
+      keyBadge.textContent = shortcut.key;
+      keyBadge.style.cssText = `
+        background: rgba(74, 144, 226, 0.3);
+        padding: 6px 12px;
         border-radius: 4px;
         font-family: 'Courier New', monospace;
         font-weight: bold;
-        min-width: 80px;
-        text-align: center;
         font-size: 13px;
-        border: 1px solid rgba(255,255,255,0.3);
+        border: 1px solid rgba(74, 144, 226, 0.5);
+        min-width: 100px;
+        text-align: center;
       `;
 
-      const actionElement = document.createElement('span');
-      actionElement.textContent = shortcut.action;
-      actionElement.style.cssText = `
+      const actionText = document.createElement('span');
+      actionText.textContent = shortcut.action;
+      actionText.style.cssText = `
         flex: 1;
-        font-size: 14px;
-        color: #f0f0f0;
+        font-size: 15px;
+        color: #e0e0e0;
       `;
 
-      shortcutItem.appendChild(keyElement);
-      shortcutItem.appendChild(actionElement);
+      shortcutItem.appendChild(keyBadge);
+      shortcutItem.appendChild(actionText);
 
-      shortcutItem.addEventListener('mouseenter', () => {
-        shortcutItem.style.background = 'rgba(255,255,255,0.1)';
-        shortcutItem.style.borderColor = 'rgba(255,255,255,0.4)';
-      });
-
-      shortcutItem.addEventListener('mouseleave', () => {
-        shortcutItem.style.background = 'rgba(0,0,0,0.3)';
-        shortcutItem.style.borderColor = 'rgba(255,255,255,0.2)';
-      });
-
-      shortcutsList.appendChild(shortcutItem);
+      shortcutsGrid.appendChild(shortcutItem);
     });
 
-    shortcutsSection.appendChild(shortcutsList);
-    sectionsContainer.appendChild(shortcutsSection);
+    shortcutsSection.appendChild(shortcutsGrid);
+    settingsContent.appendChild(shortcutsSection);
 
-    contentContainer.appendChild(sectionsContainer);
+    mainWrapper.appendChild(settingsContent);
 
-    const footerSection = document.createElement('div');
-    footerSection.style.cssText = `
+    const footer = document.createElement('div');
+    footer.style.cssText = `
+      width: 100%;
       text-align: center;
-      margin-top: auto;
-      padding-top: 20px;
+      padding: 20px 0;
     `;
 
-    const closeButton = document.createElement('button');
-    closeButton.className = 'back-menu';
-    closeButton.textContent = `← ${langManager.getText('ui.back')}`;
-    closeButton.style.cssText = `
-      padding: 12px 30px;
+    const backButton = document.createElement('button');
+    backButton.innerHTML = `<i class="fas fa-arrow-left"></i> ${langManager.getText('ui.back', 'Quay lại')}`;
+    backButton.style.cssText = `
+      padding: 15px 30px;
       font-size: 16px;
       font-weight: bold;
-      border: 2px solid rgba(255,255,255,0.4);
+      border: 2px solid rgba(255,255,255,0.3);
       border-radius: 8px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0,0,0,0.4);
       color: white;
       cursor: pointer;
-      transition: all 0.3s ease;
-      min-width: 120px;
+      min-width: 150px;
     `;
 
-    closeButton.addEventListener('mouseenter', () => {
-      closeButton.style.background = 'rgba(255,255,255,0.2)';
-      closeButton.style.borderColor = 'rgba(255,255,255,0.6)';
+    backButton.addEventListener('mouseenter', () => {
+      backButton.style.background = 'rgba(255,255,255,0.2)';
+      backButton.style.borderColor = 'rgba(255,255,255,0.6)';
+      backButton.style.transform = 'translateY(-2px)';
+      backButton.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
     });
 
-    closeButton.addEventListener('mouseleave', () => {
-      closeButton.style.background = 'rgba(0,0,0,0.3)';
-      closeButton.style.borderColor = 'rgba(255,255,255,0.4)';
+    backButton.addEventListener('mouseleave', () => {
+      backButton.style.background = 'rgba(0,0,0,0.6)';
+      backButton.style.borderColor = 'rgba(255,255,255,0.4)';
+      backButton.style.transform = 'translateY(0)';
+      backButton.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
     });
 
-    closeButton.onclick = () => {
-      menuOverlay.remove();
-      
-      /**
-       * Dùng show (gốc) hay showMainMenu đều được
-       */
-      // this.show();
+    backButton.addEventListener('click', () => {
+      this.cleanupBackgroundElements();
       this.game.showMainMenu();
-    };
+    });
 
-    footerSection.appendChild(closeButton);
-    contentContainer.appendChild(footerSection);
+    footer.appendChild(backButton);
+    mainWrapper.appendChild(footer);
 
-    settingsContainer.appendChild(contentContainer);
+    settingsContainer.appendChild(mainWrapper);
 
     menuOverlay.innerHTML = '';
     menuOverlay.appendChild(settingsContainer);
   }
 
-  private createSimpleSettingsSection(title: string, description: string, iconType: string): HTMLElement {
+  private createSimpleSettingsSection(iconClass: string, title: string, description: string): HTMLElement {
     const section = document.createElement('div');
     section.style.cssText = `
       background: rgba(0,0,0,0.4);
       border-radius: 10px;
       padding: 25px;
-      border: 1px solid rgba(255,255,255,0.2);
-      transition: all 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.15);
     `;
 
     const header = document.createElement('div');
@@ -757,42 +720,23 @@ export class MainMenuRenderer {
       display: flex;
       align-items: center;
       gap: 15px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     `;
 
-    const iconElement = document.createElement('div');
+    const iconElement = document.createElement('i');
+    iconElement.className = iconClass;
     iconElement.style.cssText = `
-      width: 32px;
-      height: 32px;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.3);
+      font-size: 20px;
+      width: 35px;
+      height: 35px;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
+      background: rgba(74, 144, 226, 0.2);
+      border-radius: 8px;
+      border: 1px solid rgba(74, 144, 226, 0.4);
+      color: #4A90E2;
     `;
-
-    if (iconType === 'lang') {
-      iconElement.innerHTML = `
-        <div style="width: 16px; height: 16px; border: 2px solid white; border-radius: 50%; position: relative;">
-          <div style="position: absolute; top: -2px; left: 6px; width: 4px; height: 20px; border-left: 1px solid white;"></div>
-          <div style="position: absolute; top: 6px; left: -2px; width: 20px; height: 4px; border-top: 1px solid white;"></div>
-        </div>
-      `;
-    } else if (iconType === 'speed') {
-      iconElement.innerHTML = `
-        <div style="width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 12px solid white; transform: rotate(-45deg);"></div>
-      `;
-    } else if (iconType === 'keys') {
-      iconElement.innerHTML = `
-        <div style="display: flex; gap: 2px;">
-          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
-          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
-          <div style="width: 6px; height: 6px; background: white; border-radius: 1px;"></div>
-        </div>
-      `;
-    }
 
     const titleElement = document.createElement('h3');
     titleElement.textContent = title;
@@ -806,45 +750,155 @@ export class MainMenuRenderer {
     header.appendChild(iconElement);
     header.appendChild(titleElement);
 
-    const descriptionElement = document.createElement('p');
-    descriptionElement.textContent = description;
-    descriptionElement.style.cssText = `
-      margin: 0 0 20px 0;
+    const descElement = document.createElement('p');
+    descElement.textContent = description;
+    descElement.style.cssText = `
+      margin: 0 0 15px 0;
       font-size: 14px;
       opacity: 0.8;
-      color: #e0e0e0;
+      color: #c0c0c0;
       line-height: 1.4;
     `;
 
     section.appendChild(header);
-    section.appendChild(descriptionElement);
-
-    section.addEventListener('mouseenter', () => {
-      section.style.background = 'rgba(0,0,0,0.5)';
-      section.style.borderColor = 'rgba(255,255,255,0.3)';
-    });
-
-    section.addEventListener('mouseleave', () => {
-      section.style.background = 'rgba(0,0,0,0.4)';
-      section.style.borderColor = 'rgba(255,255,255,0.2)';
-    });
+    section.appendChild(descElement);
 
     return section;
   }
 
-  private setupSettingsBackground(container: HTMLElement, config: any): void {
-    let backgroundStyle = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
+  private setupSettingsBackground(container: HTMLElement, settingsConfig: any, mainConfig: any): void {
+    const settingsBackgroundUrl = settingsConfig.backgroundVideo || settingsConfig.background || 
+                         mainConfig.backgroundVideo || mainConfig.background;
+    const backgroundColor = settingsConfig.backgroundColor || mainConfig.backgroundColor;
+    const backgroundOverlay = settingsConfig.backgroundOverlay || mainConfig.backgroundOverlay;
     
-    if (config.backgroundColor) {
-      backgroundStyle = `background: ${config.backgroundColor};`;
-    }
-    
-    const settingsBackgroundUrl = config.backgroundVideo || config.background;
     if (settingsBackgroundUrl) {
       const backgroundType = this.detectBackgroundType(settingsBackgroundUrl);
       
       if (backgroundType === 'video') {
+        container.style.background = 'transparent';
+        
         const video = this.setupBackgroundVideo(settingsBackgroundUrl);
+        video.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          object-fit: cover;
+          z-index: 999;
+          pointer-events: none;
+        `;
+        container.appendChild(video);
+        
+        if (!backgroundOverlay) {
+          const defaultOverlay = document.createElement('div');
+          defaultOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            pointer-events: none;
+          `;
+          container.appendChild(defaultOverlay);
+        }
+      } else {
+        container.style.backgroundImage = `url('${settingsBackgroundUrl}')`;
+        container.style.backgroundSize = 'cover';
+        container.style.backgroundPosition = 'center';
+        container.style.backgroundRepeat = 'no-repeat';
+        container.style.backgroundAttachment = 'fixed';
+        container.style.background = `url('${settingsBackgroundUrl}') center/cover no-repeat fixed`;
+      }
+    }
+
+    if (backgroundColor) {
+      container.style.background = backgroundColor;
+    }
+
+    if (backgroundOverlay) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: ${backgroundOverlay};
+        z-index: 1000;
+        pointer-events: none;
+      `;
+      container.appendChild(overlay);
+    }
+  }
+
+  private showCredits(): void {
+    const langManager = this.game.getLanguageManager();
+    const config = this.game.getScript().settings?.mainMenu || {};
+    const creditsConfig = config.credits || {};
+    
+    const creditsContainer = document.createElement('div');
+    creditsContainer.id = 'credits-container';
+    
+    this.setupCreditsBackground(creditsContainer, creditsConfig, config);
+
+    const contentContainer = document.createElement('div');
+    contentContainer.id = 'credits-content';
+    contentContainer.style.cssText = `
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 60px 40px 120px 40px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    `;
+
+    this.createCreditsTitle(contentContainer, creditsConfig, langManager);
+
+    this.createCreditsSections(contentContainer, creditsConfig, langManager);
+
+    this.createCreditsFooter(contentContainer, langManager);
+
+    creditsContainer.appendChild(contentContainer);
+
+    this.mainMenuContainer.innerHTML = '';
+    this.mainMenuContainer.appendChild(creditsContainer);
+
+    this.addCreditsAnimations();
+
+    if (creditsConfig.autoScroll) {
+      this.startAutoScroll(contentContainer, creditsConfig.scrollSpeed || 50);
+    }
+
+    if (creditsConfig.music) {
+      this.game.getAudioManager().playMusic(creditsConfig.music);
+    }
+  }
+
+  private setupCreditsBackground(container: HTMLElement, creditsConfig: any, mainConfig: any): void {
+    let backgroundStyle = 'background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);';
+    
+    const backgroundUrl = creditsConfig.backgroundVideo || creditsConfig.background || 
+                         mainConfig.backgroundVideo || mainConfig.background;
+    const backgroundColor = creditsConfig.backgroundColor || mainConfig.backgroundColor;
+    const backgroundOverlay = creditsConfig.backgroundOverlay || mainConfig.backgroundOverlay;
+    
+    if (backgroundColor) {
+      backgroundStyle = `background: ${backgroundColor};`;
+    }
+    
+    if (backgroundUrl) {
+      const backgroundType = this.detectBackgroundType(backgroundUrl);
+      
+      if (backgroundType === 'video') {
+        const video = this.setupBackgroundVideo(backgroundUrl);
         video.style.position = 'absolute';
         video.style.top = '0';
         video.style.left = '0';
@@ -856,18 +910,27 @@ export class MainMenuRenderer {
         backgroundStyle = 'background: transparent;';
       } else {
         backgroundStyle = `
-          background-image: url('${settingsBackgroundUrl}');
+          background-image: url('${backgroundUrl}');
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
+          background-attachment: fixed;
         `;
       }
     }
-    
-    if (config.backgroundOverlay) {
-      backgroundStyle += `
-        position: relative;
+
+    if (backgroundOverlay) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: ${backgroundOverlay};
+        z-index: 1;
       `;
+      container.appendChild(overlay);
     }
     
     container.style.cssText = `
@@ -878,13 +941,389 @@ export class MainMenuRenderer {
       height: 100%;
       ${backgroundStyle}
       color: white;
-      overflow-y: auto;
       pointer-events: auto;
       z-index: 1000;
     `;
   }
 
-  private showCredits(): void {
-    console.log('Credits modal');
+  private createCreditsTitle(container: HTMLElement, creditsConfig: any, langManager: any): void {
+    const style = creditsConfig.style || {};
+    const titleText = langManager.getLocalizedText(creditsConfig.title) || 
+                     langManager.getText('credits.title', 'Credits');
+
+    const titleElement = document.createElement('h1');
+    titleElement.className = 'credits-title';
+    titleElement.textContent = titleText;
+    titleElement.style.cssText = `
+      font-size: ${style.titleSize || 48}px;
+      color: ${style.titleColor || '#ffffff'};
+      font-family: ${style.fontFamily || 'Arial, sans-serif'};
+      font-weight: bold;
+      text-align: center;
+      margin: 0 0 60px 0;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: creditsSlideIn 1s ease-out 0.2s forwards;
+    `;
+
+    container.appendChild(titleElement);
+  }
+
+  private createCreditsSections(container: HTMLElement, creditsConfig: any, langManager: any): void {
+    const sections = creditsConfig.sections || this.getDefaultCreditsSections(langManager);
+    const style = creditsConfig.style || {};
+    const animationConfig = creditsConfig.animation || {};
+
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.className = 'credits-sections';
+    sectionsContainer.style.cssText = `
+      max-width: 900px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      padding: 0 40px;
+    `;
+
+    const allItems: any[] = [];
+    sections.forEach((section: any) => {
+      section.items.forEach((item: any) => {
+        allItems.push(item);
+      });
+    });
+
+    const leftColumnItems = allItems.filter((_, index) => index % 2 === 0);
+    const rightColumnItems = allItems.filter((_, index) => index % 2 === 1);
+
+    const leftColumn = document.createElement('div');
+    leftColumn.className = 'credits-column';
+    leftColumn.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: creditsSlideIn ${animationConfig.duration || 0.8}s ease-out 0.5s forwards;
+    `;
+
+    leftColumnItems.forEach((item: any) => {
+      const itemElement = this.createSimpleCreditItem(item, style, langManager);
+      leftColumn.appendChild(itemElement);
+    });
+
+    const rightColumn = document.createElement('div');
+    rightColumn.className = 'credits-column';
+    rightColumn.style.cssText = `
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: creditsSlideIn ${animationConfig.duration || 0.8}s ease-out 0.7s forwards;
+    `;
+
+    rightColumnItems.forEach((item: any) => {
+      const itemElement = this.createSimpleCreditItem(item, style, langManager);
+      rightColumn.appendChild(itemElement);
+    });
+
+    sectionsContainer.appendChild(leftColumn);
+    sectionsContainer.appendChild(rightColumn);
+    container.appendChild(sectionsContainer);
+  }
+
+  private createSimpleCreditItem(item: any, globalStyle: any, langManager: any): HTMLElement {
+    const itemElement = document.createElement('div');
+    itemElement.className = 'credit-item-simple';
+    itemElement.style.cssText = `
+      text-align: left;
+      cursor: ${item.link ? 'pointer' : 'default'};
+      transition: all 0.3s ease;
+    `;
+
+    if (item.link) {
+      itemElement.addEventListener('mouseenter', () => {
+        itemElement.style.transform = 'translateX(10px)';
+      });
+
+      itemElement.addEventListener('mouseleave', () => {
+        itemElement.style.transform = 'translateX(0)';
+      });
+
+      itemElement.addEventListener('click', () => {
+        window.open(item.link, '_blank');
+      });
+    }
+
+    if (item.role) {
+      const roleElement = document.createElement('div');
+      roleElement.className = 'item-role-simple';
+      roleElement.textContent = langManager.getLocalizedText(item.role) || item.role;
+      roleElement.style.cssText = `
+        font-size: 14px;
+        color: ${item.style?.roleColor || globalStyle.linkColor || '#CCCCCC'};
+        font-weight: normal;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
+        opacity: 0.8;
+      `;
+      itemElement.appendChild(roleElement);
+    }
+
+    const nameElement = document.createElement('div');
+    nameElement.className = 'item-name-simple';
+    nameElement.textContent = item.name;
+    nameElement.style.cssText = `
+      font-size: ${globalStyle.textSize || 24}px;
+      color: ${item.style?.nameColor || globalStyle.textColor || '#FFFFFF'};
+      font-family: ${globalStyle.fontFamily || 'Arial, sans-serif'};
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: ${item.description ? '8px' : '0'};
+    `;
+    itemElement.appendChild(nameElement);
+
+    if (item.description) {
+      const descElement = document.createElement('div');
+      descElement.className = 'item-description-simple';
+      descElement.textContent = langManager.getLocalizedText(item.description) || item.description;
+      descElement.style.cssText = `
+        font-size: ${(globalStyle.textSize || 24) - 8}px;
+        color: ${item.style?.descriptionColor || '#AAAAAA'};
+        font-family: ${globalStyle.fontFamily || 'Arial, sans-serif'};
+        line-height: 1.4;
+        opacity: 0.9;
+      `;
+      itemElement.appendChild(descElement);
+    }
+
+    return itemElement;
+  }
+
+  private createCreditsFooter(container: HTMLElement, langManager: any): void {
+    const footerElement = document.createElement('div');
+    footerElement.className = 'credits-footer';
+    footerElement.style.cssText = `
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+    `;
+
+    const backButton = document.createElement('button');
+    backButton.className = 'credits-back-button';
+    backButton.textContent = `← ${langManager.getText('ui.back', 'Quay lại')}`;
+    backButton.style.cssText = `
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 25px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    `;
+
+    backButton.addEventListener('mouseenter', () => {
+      backButton.style.background = 'rgba(255,255,255,0.2)';
+      backButton.style.borderColor = 'rgba(255,255,255,0.6)';
+      backButton.style.transform = 'translateY(-2px)';
+      backButton.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
+    });
+
+    backButton.addEventListener('mouseleave', () => {
+      backButton.style.background = 'rgba(0,0,0,0.6)';
+      backButton.style.borderColor = 'rgba(255,255,255,0.4)';
+      backButton.style.transform = 'translateY(0)';
+      backButton.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+    });
+
+    backButton.addEventListener('click', () => {
+      // Cleanup background elements trước khi chuyển trang
+      this.cleanupBackgroundElements();
+      this.game.showMainMenu();
+    });
+
+    footerElement.appendChild(backButton);
+    container.appendChild(footerElement);
+  }
+
+  private getDefaultCreditsSections(langManager: any): any[] {
+    const gameScript = this.game.getScript();
+    
+    return [
+      {
+        title: langManager.getText('credits.development', 'Credits'),
+        items: [
+          {
+            role: langManager.getText('credits.created_directed', 'Created and Directed by'),
+            name: gameScript.author || 'Unknown Author'
+          },
+          {
+            role: langManager.getText('credits.executive_producer', 'Executive Producer'),
+            name: 'Visual Novel Team'
+          },
+          {
+            role: langManager.getText('credits.producer', 'Producer'),
+            name: 'Game Studio'
+          },
+          {
+            role: langManager.getText('credits.art', 'Art'),
+            name: 'Art Team'
+          },
+          {
+            role: langManager.getText('credits.sound_designer', 'Sound Designer and Composer'),
+            name: 'Audio Team'
+          },
+          {
+            role: langManager.getText('credits.programming', 'Programming & Animation'),
+            name: 'Development Team'
+          },
+          {
+            role: langManager.getText('credits.gameplay_designer', 'Lead Gameplay Designer'),
+            name: 'Design Team'
+          },
+          {
+            role: langManager.getText('credits.design_scripting', 'Design and Scripting'),
+            name: 'Script Writers'
+          },
+          {
+            role: langManager.getText('credits.special_thanks', 'Special Thanks'),
+            name: langManager.getText('credits.you', 'Yukinovel')
+          },
+          {
+            role: langManager.getText('credits.version', 'Version'),
+            name: gameScript.version || '1.0.0'
+          }
+        ]
+      }
+    ];
+  }
+
+  private addCreditsAnimations(): void {
+    const style = document.createElement('style');
+    style.id = 'credits-animations';
+    style.innerHTML = `
+      @keyframes creditsSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .credits-title {
+        background: linear-gradient(45deg, #ffd700, #ffed4a, #ffd700);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: creditsSlideIn 1s ease-out 0.2s forwards, titleGlow 3s ease-in-out infinite;
+      }
+
+      @keyframes titleGlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+      }
+
+      .credit-item-simple:hover {
+        transform: translateX(10px);
+      }
+
+      .credits-column {
+        animation-fill-mode: forwards;
+      }
+
+      #credits-content {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
+      }
+
+      #credits-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      #credits-content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      #credits-content::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 4px;
+      }
+
+      #credits-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.5);
+      }
+
+      @media (max-width: 768px) {
+        .credits-sections {
+          grid-template-columns: 1fr !important;
+          gap: 30px !important;
+          padding: 0 20px !important;
+        }
+        
+        .credits-column {
+          gap: 30px !important;
+        }
+        
+        .item-name-simple {
+          font-size: 20px !important;
+        }
+        
+        .item-role-simple {
+          font-size: 12px !important;
+        }
+      }
+    `;
+    
+    const existingStyle = document.getElementById('credits-animations');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    document.head.appendChild(style);
+  }
+
+  private startAutoScroll(container: HTMLElement, speed: number): void {
+    let isScrolling = true;
+    let scrollPosition = 0;
+    const maxScroll = container.scrollHeight - container.clientHeight;
+
+    const scroll = () => {
+      if (!isScrolling) return;
+      
+      scrollPosition += 1;
+      container.scrollTop = scrollPosition;
+      
+      if (scrollPosition >= maxScroll) {
+        setTimeout(() => {
+          scrollPosition = 0;
+          container.scrollTop = 0;
+        }, 3000);
+      }
+      
+      setTimeout(scroll, speed);
+    };
+
+    setTimeout(scroll, 2000);
+
+    container.addEventListener('wheel', () => {
+      isScrolling = false;
+      setTimeout(() => { isScrolling = true; }, 5000);
+    });
+
+    container.addEventListener('touchstart', () => {
+      isScrolling = false;
+      setTimeout(() => { isScrolling = true; }, 5000);
+    });
   }
 } 
