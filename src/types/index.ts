@@ -166,10 +166,62 @@ export interface MainMenuConfig {
     buttonsPosition?: 'top' | 'center' | 'bottom';
     padding?: number;
   };
+  credits?: CreditsConfig;
+  settings?: {
+    background?: string;
+    backgroundVideo?: string;
+    backgroundColor?: string;
+    backgroundOverlay?: string;
+  };
   customCSS?: string;
 }
 
-// Game state
+export interface CreditsConfig {
+  title?: string | LocalizedText;
+  sections?: CreditSection[];
+  background?: string;
+  backgroundVideo?: string;
+  backgroundColor?: string;
+  backgroundOverlay?: string;
+  music?: string;
+  scrollSpeed?: number;
+  autoScroll?: boolean;
+  style?: {
+    titleColor?: string;
+    titleSize?: number;
+    sectionTitleColor?: string;
+    sectionTitleSize?: number;
+    textColor?: string;
+    textSize?: number;
+    linkColor?: string;
+    fontFamily?: string;
+    lineHeight?: number;
+    spacing?: number;
+  };
+}
+
+export interface CreditSection {
+  title?: string | LocalizedText;
+  items: CreditItem[];
+  style?: {
+    titleColor?: string;
+    titleSize?: number;
+    spacing?: number;
+  };
+}
+
+export interface CreditItem {
+  role?: string | LocalizedText;
+  name: string;
+  description?: string | LocalizedText;
+  link?: string;
+  style?: {
+    nameColor?: string;
+    roleColor?: string;
+    descriptionColor?: string;
+  };
+}
+
 export interface GameState {
   currentScene: string;
   currentDialogue: number;
@@ -178,7 +230,6 @@ export interface GameState {
   savedAt?: Date;
 }
 
-// Events
 export interface GameEvent {
   type: 'dialogue' | 'scene' | 'choice' | 'save' | 'load' | 'end';
   data?: any;
