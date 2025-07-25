@@ -54,22 +54,8 @@ export class DialogueRenderer {
       const choiceText = langManager.getLocalizedText(choice.text);
       html += `
         <button 
-          class="choice-button" 
+          class="vn-choice-button" 
           data-index="${index}"
-          style="
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 15px 20px;
-            background: rgba(255,255,255,0.9);
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-          "
-          onmouseover="this.style.background='rgba(255,255,255,1)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.9)'"
         >
           ${choiceText}
         </button>
@@ -78,7 +64,7 @@ export class DialogueRenderer {
     
     this.choicesContainer.innerHTML = html;
     
-    this.choicesContainer.querySelectorAll('.choice-button').forEach((button, index) => {
+    this.choicesContainer.querySelectorAll('.vn-choice-button').forEach((button, index) => {
       button.addEventListener('click', () => {
         this.game.makeChoice(choices[index]);
       });
@@ -196,9 +182,9 @@ export class DialogueRenderer {
     
     let html = '';
     if (this.currentCharacterName) {
-      html += `<div style="color: ${this.currentCharacterColor}; font-weight: bold; margin-bottom: 10px;">${this.currentCharacterName}</div>`;
+      html += `<div class="vn-dialogue-character-name" style="color: ${this.currentCharacterColor};">${this.currentCharacterName}</div>`;
     }
-    html += `<div style="font-size: 18px; line-height: 1.4;">${displayText}</div>`;
+    html += `<div class="vn-dialogue-text">${displayText}</div>`;
     
     this.dialogueContainer.innerHTML = html;
   }
@@ -218,9 +204,9 @@ export class DialogueRenderer {
       
       let html = '';
       if (this.currentCharacterName) {
-        html += `<div style="color: ${this.currentCharacterColor}; font-weight: bold; margin-bottom: 10px;">${this.currentCharacterName}</div>`;
+        html += `<div class="vn-dialogue-character-name" style="color: ${this.currentCharacterColor};">${this.currentCharacterName}</div>`;
       }
-      html += `<div style="font-size: 18px; line-height: 1.4;">${this.currentDialogueText}</div>`;
+      html += `<div class="vn-dialogue-text">${this.currentDialogueText}</div>`;
       
       this.dialogueContainer.innerHTML = html;
       

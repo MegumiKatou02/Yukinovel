@@ -132,7 +132,6 @@ export interface MainMenuConfig {
   background?: string;
   backgroundVideo?: string;
   backgroundColor?: string;
-  backgroundOverlay?: string;
   music?: string;
   title?: {
     text?: string | LocalizedText;
@@ -171,7 +170,6 @@ export interface MainMenuConfig {
     background?: string;
     backgroundVideo?: string;
     backgroundColor?: string;
-    backgroundOverlay?: string;
   };
   customCSS?: string;
 }
@@ -182,22 +180,23 @@ export interface CreditsConfig {
   background?: string;
   backgroundVideo?: string;
   backgroundColor?: string;
-  backgroundOverlay?: string;
   music?: string;
   scrollSpeed?: number;
   autoScroll?: boolean;
-  style?: {
-    titleColor?: string;
-    titleSize?: number;
-    sectionTitleColor?: string;
-    sectionTitleSize?: number;
-    textColor?: string;
-    textSize?: number;
-    linkColor?: string;
-    fontFamily?: string;
-    lineHeight?: number;
-    spacing?: number;
-  };
+  style?: CreditStyle
+}
+
+export interface CreditStyle {
+  titleColor?: string;
+  titleSize?: number;
+  sectionTitleColor?: string;
+  sectionTitleSize?: number;
+  textColor?: string;
+  textSize?: number;
+  linkColor?: string;
+  fontFamily?: string;
+  lineHeight?: number;
+  spacing?: number;
 }
 
 export interface CreditSection {

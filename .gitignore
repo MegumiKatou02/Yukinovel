@@ -3,7 +3,9 @@ dist_test/
 
 *.jpg
 *.png
+*.mp3
 *.mp4
+# *.css
 
 node_modules/
 examples/

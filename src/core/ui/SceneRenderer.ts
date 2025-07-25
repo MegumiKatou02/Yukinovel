@@ -266,14 +266,7 @@ export class SceneRenderer {
     switch (backgroundType) {
       case 'video':
         this.backgroundVideo = this.setupBackgroundVideo(backgroundUrl);
-        this.backgroundVideo.style.position = 'absolute';
-        this.backgroundVideo.style.top = '0';
-        this.backgroundVideo.style.left = '0';
-        this.backgroundVideo.style.width = '100%';
-        this.backgroundVideo.style.height = '100%';
-        this.backgroundVideo.style.objectFit = 'cover';
-        this.backgroundVideo.style.zIndex = '0';
-        this.backgroundVideo.style.opacity = '1';
+        this.backgroundVideo.className = 'vn-background-video';
         this.backgroundElement.appendChild(this.backgroundVideo);
         break;
       
@@ -333,7 +326,7 @@ export class SceneRenderer {
       if (isNewCharacter) {
         charElement = document.createElement('div');
         charElement.id = `character-${character.name}`;
-        charElement.className = 'character-element'; // Add base class
+        charElement.className = 'vn-character-element';
         this.characterContainer.appendChild(charElement);
       }
       
@@ -349,17 +342,13 @@ export class SceneRenderer {
       const xValue = typeof x === 'string' ? x : `${x}px`;
       const yValue = typeof y === 'string' ? y : `${y}px`;
       
-      charElement.style.position = 'absolute';
+      // Apply positioning styles (these are dynamic, so inline is acceptable)
       charElement.style.bottom = yValue;
       charElement.style.left = xValue;
       charElement.style.width = typeof width === 'string' ? width : `${width}px`;
       charElement.style.height = typeof height === 'string' ? height : `${height}px`;
       charElement.style.backgroundImage = `url(${character.image || ''})`;
-      charElement.style.backgroundSize = 'contain';
-      charElement.style.backgroundPosition = 'bottom';
-      charElement.style.backgroundRepeat = 'no-repeat';
       charElement.style.transform = `scale(${scale})`;
-      charElement.style.transformOrigin = 'bottom center';
 
       if (isNewCharacter && fadeInNewCharacters) {
         charElement.style.opacity = '0';

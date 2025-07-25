@@ -36,6 +36,7 @@ export class UIRenderer {
   render(container: HTMLElement): void {
     this.container = container;
     this.container.id = 'container';
+    this.container.className = 'vn-container vn-no-select';
     this.createUIStructure();
     this.initializeRenderers();
     this.attachEventListeners();
@@ -48,15 +49,7 @@ export class UIRenderer {
      */
     this.mainMenuContainer = document.createElement('div');
     this.mainMenuContainer.id = 'container-menu';
-    this.mainMenuContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      pointer-events: auto;
-    `;
+    this.mainMenuContainer.className = 'vn-main-menu-container';
     this.container.appendChild(this.mainMenuContainer);
 
     /**
@@ -65,13 +58,7 @@ export class UIRenderer {
      */
     this.gameContainer = document.createElement('div');
     this.gameContainer.id = 'container-game';
-    this.gameContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    `;
+    this.gameContainer.className = 'vn-game-container';
     this.container.appendChild(this.gameContainer);
 
     /**
@@ -80,17 +67,7 @@ export class UIRenderer {
      */
     this.backgroundElement = document.createElement('div');
     this.backgroundElement.id = 'background-game';
-    this.backgroundElement.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      transition: opacity 0.5s ease;
-    `;
+    this.backgroundElement.className = 'vn-background';
     this.gameContainer.appendChild(this.backgroundElement);
 
     /**
@@ -99,14 +76,7 @@ export class UIRenderer {
      */
     this.characterContainer = document.createElement('div');
     this.characterContainer.id = 'container-character';
-    this.characterContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    `;
+    this.characterContainer.className = 'vn-character-container';
     this.gameContainer.appendChild(this.characterContainer);
 
     /**
@@ -115,14 +85,7 @@ export class UIRenderer {
      */
     this.uiContainer = document.createElement('div');
     this.uiContainer.id = 'container-ui';
-    this.uiContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    `;
+    this.uiContainer.className = 'vn-ui-container';
     this.gameContainer.appendChild(this.uiContainer);
 
     /**
@@ -131,20 +94,7 @@ export class UIRenderer {
      */
     this.dialogueContainer = document.createElement('div');
     this.dialogueContainer.id = 'container-dialogue';
-    this.dialogueContainer.style.cssText = `
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 200px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.9));
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-      pointer-events: auto;
-      cursor: pointer;
-      transition: opacity 0.3s ease;
-    `;
+    this.dialogueContainer.className = 'vn-dialogue-container';
     this.uiContainer.appendChild(this.dialogueContainer);
 
     /**
@@ -153,16 +103,7 @@ export class UIRenderer {
      */
     this.choicesContainer = document.createElement('div');
     this.choicesContainer.id = 'container-choices';
-    this.choicesContainer.style.cssText = `
-      position: absolute;
-      bottom: 220px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      max-width: 600px;
-      pointer-events: auto;
-      display: none;
-    `;
+    this.choicesContainer.className = 'vn-choices-container';
     this.uiContainer.appendChild(this.choicesContainer);
 
     /**
@@ -171,25 +112,7 @@ export class UIRenderer {
      */
     this.controlsContainer = document.createElement('div');
     this.controlsContainer.id = 'container-controls';
-    this.controlsContainer.style.cssText = `
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      color: white;
-      background-color: rgba(0,0,0,0.2);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      font-size: 12px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      backdrop-filter: blur(5px);
-      pointer-events: auto;
-      opacity: 0.8;
-      transition: opacity 0.3s ease;
-    `;
-    this.controlsContainer.onmouseover = () => this.controlsContainer.style.opacity = '1';
-    this.controlsContainer.onmouseout = () => this.controlsContainer.style.opacity = '0.8';
+    this.controlsContainer.className = 'vn-controls-container';
     this.uiContainer.appendChild(this.controlsContainer);
 
     this.createControlButtons();
@@ -200,20 +123,7 @@ export class UIRenderer {
      */
     this.logContainer = document.createElement('div');
     this.logContainer.id = 'container-log';
-    this.logContainer.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.95);
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      display: none;
-      pointer-events: auto;
-    `;
+    this.logContainer.className = 'vn-log-container';
     this.uiContainer.appendChild(this.logContainer);
   }
 
@@ -236,44 +146,16 @@ export class UIRenderer {
 
     controls.forEach(control => {
       const controlDiv = document.createElement('div');
-      controlDiv.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        padding: 4px 6px;
-        border-radius: 4px;
-        opacity: 0.8;
-      `;
-      controlDiv.onmouseover = () => {
-        controlDiv.style.opacity = '1';
-        controlDiv.style.backgroundColor = 'rgba(255,255,255,0.1)';
-      };
-      controlDiv.onmouseout = () => {
-        controlDiv.style.opacity = '0.8';
-        controlDiv.style.backgroundColor = 'transparent';
-      };
+      controlDiv.className = 'vn-control-item';
       controlDiv.onclick = control.onClick;
 
       const keyDiv = document.createElement('div');
       keyDiv.textContent = control.key;
-      keyDiv.style.cssText = `
-        background: rgba(255,255,255,0.2);
-        padding: 2px 6px;
-        border-radius: 3px;
-        font-weight: bold;
-        font-size: 10px;
-        min-width: 20px;
-        text-align: center;
-      `;
+      keyDiv.className = 'vn-control-key';
 
       const actionDiv = document.createElement('div');
       actionDiv.textContent = control.action;
-      actionDiv.style.cssText = `
-        font-size: 10px;
-        white-space: nowrap;
-      `;
+      actionDiv.className = 'vn-control-action';
 
       controlDiv.appendChild(keyDiv);
       controlDiv.appendChild(actionDiv);
