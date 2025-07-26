@@ -36,25 +36,6 @@ export class MainMenuRenderer {
     const langManager = this.game.getLanguageManager();
     
     this.setupBackground(config);
-
-    /**
-     * @description Không cần thiết lắm
-     */
-    // Overlay
-    // if (config.backgroundOverlay) {
-    //   const overlay = document.createElement('div');
-    //   overlay.id = 'backgroundOverlay';
-    //   overlay.style.cssText = `
-    //     position: absolute;
-    //     top: 0;
-    //     left: 0;
-    //     width: 100%;
-    //     height: 100%;
-    //     background: ${config.backgroundOverlay};
-    //     z-index: 1;
-    //   `;
-    //   this.mainMenuContainer.appendChild(overlay);
-    // }
     
     // Main content container
     const contentContainer = document.createElement('div');
@@ -631,52 +612,29 @@ export class MainMenuRenderer {
   }
 
   private setupCreditsBackground(container: HTMLElement, creditsConfig: CreditsConfig, mainConfig: MainMenuConfig): void {
-    let backgroundStyle = 'background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);';
+    // let backgroundStyle = 'background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);';
     
     const backgroundUrl = creditsConfig.backgroundVideo || creditsConfig.background || 
       mainConfig.backgroundVideo || mainConfig.background;
     const backgroundColor = creditsConfig.backgroundColor || mainConfig.backgroundColor;
     
     if (backgroundColor) {
-      backgroundStyle = `background: ${backgroundColor};`;
+      container.style.background = backgroundColor;
     }
     
     if (backgroundUrl) {
       const backgroundType = this.detectBackgroundType(backgroundUrl);
       
       if (backgroundType === 'video') {
+        container.classList.add('video');
         const video = this.setupBackgroundVideo(backgroundUrl);
-        video.style.position = 'absolute';
-        video.style.top = '0';
-        video.style.left = '0';
-        video.style.width = '100%';
-        video.style.height = '100%';
-        video.style.objectFit = 'cover';
-        video.style.zIndex = '0';
+        video.classList.add('vn-background-video');
         container.appendChild(video);
-        backgroundStyle = 'background: transparent;';
       } else {
-        backgroundStyle = `
-          background-image: url('${backgroundUrl}');
-          background-size: cover;
-          background-position: center;
-          background-repeat: no-repeat;
-          background-attachment: fixed;
-        `;
+        container.classList.add('non-video');
+        container.style.backgroundImage = `url('${backgroundUrl}')`;
       }
     }
-    
-    container.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      ${backgroundStyle}
-      color: white;
-      pointer-events: auto;
-      z-index: 1000;
-    `;
   }
 
   private createCreditsTitle(container: HTMLElement, creditsConfig: CreditsConfig, langManager: LanguageManager): void {
