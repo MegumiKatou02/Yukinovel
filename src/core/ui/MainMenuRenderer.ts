@@ -640,7 +640,7 @@ export class MainMenuRenderer {
   private createCreditsTitle(container: HTMLElement, creditsConfig: CreditsConfig, langManager: LanguageManager): void {
     const style = creditsConfig.style || {};
     const titleText = langManager.getLocalizedText(creditsConfig.title ?? 'en') || 
-                     langManager.getText('credits.title', 'Credits');
+      langManager.getText('credits.title', 'Credits');
 
     const titleElement = document.createElement('h1');
     titleElement.className = 'credits-title';

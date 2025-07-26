@@ -2,7 +2,7 @@ import { Game } from '../core/Game.js';
 import { GameScript } from '../types/index.js';
 
 /**
- * Tạo một game Visual Novel mới
+ * Tạo game mới
  * @param script Script của game
  * @returns Game instance
  */
