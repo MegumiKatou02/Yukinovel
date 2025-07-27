@@ -4,6 +4,7 @@ import { MainMenuRenderer } from './ui/MainMenuRenderer.js';
 import { DialogueRenderer } from './ui/DialogueRenderer.js';
 import { SceneRenderer } from './ui/SceneRenderer.js';
 import { ModalRenderer } from './ui/ModalRenderer.js';
+import { SaveLoadRenderer } from './ui/SaveLoadRenderer.js';
 
 export class UIRenderer {
   private game: Game;
@@ -28,6 +29,7 @@ export class UIRenderer {
   private dialogueRenderer!: DialogueRenderer;
   private sceneRenderer!: SceneRenderer;
   private modalRenderer!: ModalRenderer;
+  private saveLoadRenderer!: SaveLoadRenderer;
 
   constructor(game: Game) {
     this.game = game;
@@ -132,6 +134,9 @@ export class UIRenderer {
     this.dialogueRenderer = new DialogueRenderer(this.game, this.dialogueContainer, this.choicesContainer);
     this.sceneRenderer = new SceneRenderer(this.game, this.backgroundElement, this.characterContainer);
     this.modalRenderer = new ModalRenderer(this.game, this.logContainer);
+    
+    this.saveLoadRenderer = new SaveLoadRenderer(this.game);
+    this.saveLoadRenderer.render(this.container);
   }
 
   private createControlButtons(): void {
@@ -139,8 +144,8 @@ export class UIRenderer {
     const controls = [
       { key: 'Enter', action: langManager.getText('ui.next'), onClick: () => this.handleNext() },
       { key: 'Esc', action: langManager.getText('exit.title', 'Thoát'), onClick: () => this.modalRenderer.showExitConfirm() },
-      { key: 'S', action: langManager.getText('ui.save'), onClick: () => this.game.saveGame() },
-      { key: 'L', action: langManager.getText('ui.load'), onClick: () => this.game.loadGame() },
+      { key: 'S', action: langManager.getText('ui.save'), onClick: () => this.showSavePanel() },
+      { key: 'L', action: langManager.getText('ui.load'), onClick: () => this.showLoadPanel() },
       { key: 'H', action: langManager.getText('ui.history'), onClick: () => this.modalRenderer.toggleLog() }
     ];
 
@@ -236,5 +241,13 @@ export class UIRenderer {
 
   showCredits(): void {
     console.log('Credits modal');
+  }
+
+  showSavePanel(): void {
+    this.saveLoadRenderer.showSavePanel();
+  }
+
+  showLoadPanel(): void {
+    this.saveLoadRenderer.showLoadPanel();
   }
 } 

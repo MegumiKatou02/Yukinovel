@@ -171,10 +171,10 @@ export class Game {
         this.emit('end', {});
         break;
       case 'save':
-        this.saveGame();
+        // this.uiRenderer.showSavePanel();
         break;
       case 'load':
-        this.loadGame();
+        // this.uiRenderer.showLoadPanel();
         break;
     }
   }
@@ -277,5 +277,9 @@ export class Game {
 
   getUIRenderer(): UIRenderer {
     return this.uiRenderer;
+  }
+
+  getSaveManager(): SaveManager {
+    return this.saveManager;
   }
 } 

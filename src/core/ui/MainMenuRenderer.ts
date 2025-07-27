@@ -71,7 +71,6 @@ export class MainMenuRenderer {
   }
 
   private setupBackground(config: MainMenuConfig): void {
-    // Remove existing background classes
     this.mainMenuContainer.className = 'vn-main-menu-container';
     
     let backgroundStyle = '';
@@ -206,7 +205,7 @@ export class MainMenuRenderer {
     const menuButtons = [
       { text: langManager.getText('menu.start'), action: () => this.game.startNewGame(), icon: '' },
       { text: langManager.getText('menu.continue'), action: () => this.game.continueGame(), icon: '' },
-      { text: langManager.getText('menu.load'), action: () => this.game.loadGame(), icon: '' },
+      { text: langManager.getText('menu.load'), action: () => this.game.getUIRenderer().showLoadPanel(), icon: '' },
       { text: langManager.getText('menu.settings'), action: () => this.showSettings(buttonsContainer), icon: '' },
       { text: langManager.getText('menu.credits'), action: () => this.showCredits(), icon: '' },
       { text: langManager.getText('menu.exit'), action: () => window.close(), icon: '' }

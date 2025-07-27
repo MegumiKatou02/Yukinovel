@@ -330,7 +330,7 @@ export class SceneRenderer {
         this.characterContainer.appendChild(charElement);
       }
       
-      if (!charElement) return; // Safety check
+      if (!charElement) return;
       
       const position = character.position || {};
       const x = position.x !== undefined ? position.x : (20 + index * 200);
@@ -342,7 +342,6 @@ export class SceneRenderer {
       const xValue = typeof x === 'string' ? x : `${x}px`;
       const yValue = typeof y === 'string' ? y : `${y}px`;
       
-      // Apply positioning styles (these are dynamic, so inline is acceptable)
       charElement.style.bottom = yValue;
       charElement.style.left = xValue;
       charElement.style.width = typeof width === 'string' ? width : `${width}px`;
