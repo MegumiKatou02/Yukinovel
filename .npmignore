@@ -1,0 +1,10 @@
+src/
+test/
+.vscode/
+docs/
+
+.gitignore
+tsconfig.json
+jest.config.js
+*.spec.ts
+*.test.ts

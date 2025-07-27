@@ -20,6 +20,9 @@
     "story",
     "anime"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "Yukiookii",
   "license": "MIT",
   "devDependencies": {
