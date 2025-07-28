@@ -5,6 +5,7 @@ import { DialogueRenderer } from './ui/DialogueRenderer.js';
 import { SceneRenderer } from './ui/SceneRenderer.js';
 import { ModalRenderer } from './ui/ModalRenderer.js';
 import { SaveLoadRenderer } from './ui/SaveLoadRenderer.js';
+import { ConfirmModal } from './ui/ConfirmModal.js';
 
 export class UIRenderer {
   private game: Game;
@@ -30,6 +31,7 @@ export class UIRenderer {
   private sceneRenderer!: SceneRenderer;
   private modalRenderer!: ModalRenderer;
   private saveLoadRenderer!: SaveLoadRenderer;
+  private confirmModal!: ConfirmModal;
 
   constructor(game: Game) {
     this.game = game;
@@ -137,6 +139,9 @@ export class UIRenderer {
     
     this.saveLoadRenderer = new SaveLoadRenderer(this.game);
     this.saveLoadRenderer.render(this.container);
+    
+    this.confirmModal = ConfirmModal.getInstance(this.game);
+    this.confirmModal.render(this.container);
   }
 
   private createControlButtons(): void {
@@ -189,10 +194,10 @@ export class UIRenderer {
         this.modalRenderer.showExitConfirm();
       } else if (e.code === 'KeyS') {
         e.preventDefault();
-        this.game.saveGame();
+        this.showSavePanel();
       } else if (e.code === 'KeyL') {
         e.preventDefault();
-        this.game.loadGame();
+        this.showLoadPanel();
       } else if (e.code === 'KeyH') {
         e.preventDefault();
         this.modalRenderer.toggleLog();
@@ -249,5 +254,9 @@ export class UIRenderer {
 
   showLoadPanel(): void {
     this.saveLoadRenderer.showLoadPanel();
+  }
+
+  getConfirmModal(): ConfirmModal {
+    return this.confirmModal;
   }
 } 

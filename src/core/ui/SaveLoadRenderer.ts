@@ -1,4 +1,5 @@
 import { Game } from '../Game.js';
+import { ConfirmModal } from './ConfirmModal.js';
 
 export class SaveLoadRenderer {
   private game: Game;
@@ -144,6 +145,16 @@ export class SaveLoadRenderer {
             slotImage.style.backgroundSize = 'cover';
             slotImage.style.backgroundPosition = 'center';
           }
+
+          const deleteButton = document.createElement('button');
+          deleteButton.className = 'vn-saveload-delete-btn';
+          deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+          deleteButton.title = this.game.getText('delete_save', 'Xóa save');
+          deleteButton.onclick = (e) => {
+            e.stopPropagation();
+            this.handleDeleteSave(i);
+          };
+          slotHeader.appendChild(deleteButton);
         }
       } else {
         slot.classList.add('empty-save');
@@ -161,30 +172,51 @@ export class SaveLoadRenderer {
     }
   }
 
+  private handleDeleteSave(slotNumber: number): void {
+    ConfirmModal.danger(
+      this.game,
+      this.game.getText('confirm_delete', 'Xác nhận xóa'),
+      this.game.getText('confirm_delete_message', `Bạn có chắc muốn xóa save slot ${slotNumber}?`),
+      () => {
+        this.game.getSaveManager().deleteSave(slotNumber);
+        this.renderSlots();
+        this.showToast(this.game.getText('delete_success', 'Đã xóa save thành công!'), 'success');
+      }
+    );
+  }
+
   private handleSlotClick(slotNumber: number, hasSave: boolean): void {
     if (this.currentMode === 'save') {
+      let title = this.game.getText('confirm_save_title', 'Xác nhận lưu game');
       let message = this.game.getText('confirm_save', 'Bạn có muốn lưu game vào slot này?');
+      
       if (hasSave) {
+        title = this.game.getText('confirm_overwrite_title', 'Ghi đè dữ liệu');
         message = this.game.getText('confirm_overwrite', 'Slot này đã có dữ liệu. Bạn có muốn ghi đè?');
       }
       
-      if (confirm(message)) {
-        this.game.saveGame(slotNumber);
-        this.renderSlots();
-        
-        this.showToast(this.game.getText('save_success', 'Đã lưu thành công!'));
-      }
+      ConfirmModal.confirm(this.game, {
+        title,
+        message,
+        onConfirm: () => {
+          this.game.saveGame(slotNumber);
+          this.renderSlots();
+          this.showToast(this.game.getText('save_success', 'Đã lưu thành công!'), 'success');
+        }
+      });
     } else if (this.currentMode === 'load') {
       if (hasSave) {
-        const message = this.game.getText('confirm_load', 'Bạn có muốn tải game từ slot này?');
-        if (confirm(message)) {
-          this.game.loadGame(slotNumber);
-          this.hide();
-          
-          this.showToast(this.game.getText('load_success', 'Đã tải thành công!'));
-        }
+        ConfirmModal.confirm(this.game, {
+          title: this.game.getText('confirm_load_title', 'Xác nhận tải game'),
+          message: this.game.getText('confirm_load', 'Bạn có muốn tải game từ slot này?'),
+          onConfirm: () => {
+            this.game.loadGame(slotNumber);
+            this.hide();
+            this.showToast(this.game.getText('load_success', 'Đã tải thành công!'), 'success');
+          }
+        });
       } else {
-        this.showToast(this.game.getText('empty_slot', 'Slot này không có dữ liệu!'));
+        this.showToast(this.game.getText('empty_slot', 'Slot này không có dữ liệu!'), 'error');
       }
     }
   }
@@ -199,10 +231,30 @@ export class SaveLoadRenderer {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
-  private showToast(message: string): void {
+  private showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     const toast = document.createElement('div');
-    toast.className = 'vn-toast';
-    toast.textContent = message;
+    toast.className = `vn-toast vn-toast-${type}`;
+    
+    const icon = document.createElement('div');
+    icon.className = 'vn-toast-icon';
+    
+    switch (type) {
+      case 'success':
+        icon.innerHTML = '✓';
+        break;
+      case 'error':
+        icon.innerHTML = '✕';
+        break;
+      default:
+        icon.innerHTML = 'ℹ';
+    }
+    
+    const text = document.createElement('div');
+    text.className = 'vn-toast-text';
+    text.textContent = message;
+    
+    toast.appendChild(icon);
+    toast.appendChild(text);
     
     document.body.appendChild(toast);
     
@@ -210,17 +262,21 @@ export class SaveLoadRenderer {
     
     setTimeout(() => {
       toast.classList.remove('show');
-      setTimeout(() => document.body.removeChild(toast), 300);
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
     }, 3000);
   }
 
   private show(): void {
     this.saveLoadModal.classList.remove('vn-hidden');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    document.body.style.overflow = 'hidden';
   }
 
   private hide(): void {
     this.saveLoadModal.classList.add('vn-hidden');
-    document.body.style.overflow = 'auto'; // Restore scrolling
+    document.body.style.overflow = 'auto';
   }
 } 

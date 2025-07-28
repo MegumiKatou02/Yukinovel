@@ -282,4 +282,8 @@ export class Game {
   getSaveManager(): SaveManager {
     return this.saveManager;
   }
+
+  getConfirmModal() {
+    return this.uiRenderer.getConfirmModal();
+  }
 } 
