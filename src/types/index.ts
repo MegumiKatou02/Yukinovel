@@ -1,3 +1,6 @@
+import { Game } from "../core/Game";
+import { PluginManager } from "../core/PluginManager";
+
 // Character types
 export interface Character {
   name: string;
@@ -122,7 +125,6 @@ export interface GameSettings {
   height?: number | string;
   textSpeed?: number;
   autoPlay?: boolean;
-  theme?: 'light' | 'dark';
   language?: string;
   mainMenu?: MainMenuConfig;
 }
@@ -234,4 +236,106 @@ export interface GameEvent {
   data?: any;
 }
 
-export type GameEventHandler = (event: GameEvent) => void; 
+export type GameEventHandler = (event: GameEvent) => void;
+
+// Plugin System Types
+export interface PluginHookContext {
+  game: Game; // Game instance
+  state: GameState;
+  scene?: Scene;
+  dialogue?: DialogueEntry;
+  choice?: Choice;
+  slot?: number;
+  language?: string;
+  volume?: number;
+  [key: string]: any;
+}
+
+export interface PluginHooks {
+  // Game lifecycle hooks
+  onStart?: (context: PluginHookContext) => void | Promise<void>;
+  onEnd?: (context: PluginHookContext) => void | Promise<void>;
+  onPause?: (context: PluginHookContext) => void | Promise<void>;
+  onResume?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Scene hooks
+  onSceneWillStart?: (context: PluginHookContext) => void | Promise<void>;
+  onSceneStarted?: (context: PluginHookContext) => void | Promise<void>;
+  onSceneWillEnd?: (context: PluginHookContext) => void | Promise<void>;
+  onSceneEnded?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Dialogue hooks
+  onDialogueWillDisplay?: (context: PluginHookContext) => void | Promise<void>;
+  onDialogueDisplayed?: (context: PluginHookContext) => void | Promise<void>;
+  onDialogueWillHide?: (context: PluginHookContext) => void | Promise<void>;
+  onDialogueHidden?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Choice hooks
+  onChoicesWillDisplay?: (context: PluginHookContext) => void | Promise<void>;
+  onChoicesDisplayed?: (context: PluginHookContext) => void | Promise<void>;
+  onChoiceSelected?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Save/Load hooks
+  onWillSave?: (context: PluginHookContext) => void | Promise<void>;
+  onSaved?: (context: PluginHookContext) => void | Promise<void>;
+  onWillLoad?: (context: PluginHookContext) => void | Promise<void>;
+  onLoaded?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Audio hooks
+  onMusicWillPlay?: (context: PluginHookContext) => void | Promise<void>;
+  onMusicPlayed?: (context: PluginHookContext) => void | Promise<void>;
+  onMusicWillStop?: (context: PluginHookContext) => void | Promise<void>;
+  onMusicStopped?: (context: PluginHookContext) => void | Promise<void>;
+  onSoundWillPlay?: (context: PluginHookContext) => void | Promise<void>;
+  onSoundPlayed?: (context: PluginHookContext) => void | Promise<void>;
+  onVolumeChanged?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Language hooks
+  onLanguageWillChange?: (context: PluginHookContext) => void | Promise<void>;
+  onLanguageChanged?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // UI hooks
+  onUIWillRender?: (context: PluginHookContext) => void | Promise<void>;
+  onUIRendered?: (context: PluginHookContext) => void | Promise<void>;
+  onMenuWillShow?: (context: PluginHookContext) => void | Promise<void>;
+  onMenuShown?: (context: PluginHookContext) => void | Promise<void>;
+  onMenuWillHide?: (context: PluginHookContext) => void | Promise<void>;
+  onMenuHidden?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Character hooks
+  onCharacterWillShow?: (context: PluginHookContext) => void | Promise<void>;
+  onCharacterShown?: (context: PluginHookContext) => void | Promise<void>;
+  onCharacterWillHide?: (context: PluginHookContext) => void | Promise<void>;
+  onCharacterHidden?: (context: PluginHookContext) => void | Promise<void>;
+  
+  // Custom hooks for advanced functionality
+  onCustomEvent?: (context: PluginHookContext & { eventName: string }) => void | Promise<void>;
+}
+
+export interface PluginMetadata {
+  name: string;
+  version: string;
+  author?: string;
+  description?: string;
+  dependencies?: string[];
+  requiredEngineVersion?: string;
+  priority?: number; // priority (default: 0)
+}
+
+export interface Plugin {
+  metadata: PluginMetadata;
+  hooks?: PluginHooks;
+  
+  // Optional lifecycle methods
+  initialize?: (game: Game, pluginManager: PluginManager) => void | Promise<void>;
+  dispose?: () => void | Promise<void>;
+  
+  // Optional API that plugin can expose
+  api?: { [key: string]: any };
+}
+
+export interface PluginRegistry {
+  [pluginName: string]: Plugin;
+}
+
+export type PluginEventType = keyof PluginHooks | 'customEvent'; 

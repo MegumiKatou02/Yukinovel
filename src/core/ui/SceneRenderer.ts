@@ -169,7 +169,7 @@ export class SceneRenderer {
 
   private fadeOutCharacter(charElement: HTMLElement, callback: () => void, customDuration?: number, animation: AnimationType = 'fadeOut'): void {
     const duration = customDuration || this.fadeAnimationDuration;
-    console.log(`Character fade out: ${animation}, duration: ${duration}ms`);
+    // console.log(`Character fade out: ${animation}, duration: ${duration}ms`);
     
     charElement.classList.remove('animate__animated');
     charElement.className = charElement.className.replace(/animate__\w+/g, '');
@@ -181,7 +181,7 @@ export class SceneRenderer {
     charElement.classList.add('animate__animated', `animate__${animation}`);
     
     const handleAnimationEnd = () => {
-      console.log(`Character fade out completed: ${animation}`);
+      // console.log(`Character fade out completed: ${animation}`);
       charElement.classList.remove('animate__animated', `animate__${animation}`);
       charElement.removeEventListener('animationend', handleAnimationEnd);
       callback();
@@ -191,7 +191,7 @@ export class SceneRenderer {
 
   private fadeInCharacter(charElement: HTMLElement, customDuration?: number, animation: AnimationType = 'fadeIn'): void {
     const duration = customDuration || this.fadeAnimationDuration;
-    console.log(`Character fade in: ${animation}, duration: ${duration}ms`);
+    // console.log(`Character fade in: ${animation}, duration: ${duration}ms`);
     
     charElement.classList.remove('animate__animated');
     charElement.className = charElement.className.replace(/animate__\w+/g, '');
@@ -203,7 +203,7 @@ export class SceneRenderer {
     charElement.classList.add('animate__animated', `animate__${animation}`);
     
     const handleAnimationEnd = () => {
-      console.log(`Character fade in completed: ${animation}`);
+      // console.log(`Character fade in completed: ${animation}`);
       charElement.classList.remove('animate__animated', `animate__${animation}`);
       charElement.removeEventListener('animationend', handleAnimationEnd);
     };

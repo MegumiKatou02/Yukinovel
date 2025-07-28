@@ -14,6 +14,7 @@ export { Game } from './core/Game.js';
 export { AudioManager } from './core/AudioManager.js';
 export { SaveManager } from './core/SaveManager.js';
 export { UIRenderer } from './core/UIRenderer.js';
+export { PluginManager } from './core/PluginManager.js';
 
 // Types
 export * from './types/index.js';
@@ -21,4 +22,5 @@ export * from './types/index.js';
 // Utility functions
 export { createGame } from './utils/createGame.js';
 export { createCharacter } from './utils/createCharacter.js';
-export { createScene } from './utils/createScene.js'; 
+export { createScene } from './utils/createScene.js';
+export { createPlugin, PluginBase, PluginRegistryBuilder, validatePlugin, hook } from './utils/createPlugin.js'; 

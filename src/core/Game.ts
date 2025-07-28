@@ -1,8 +1,9 @@
-import { GameScript, GameState, GameEvent, GameEventHandler, Scene, DialogueEntry, Choice } from '../types/index.js';
+import { GameScript, GameState, GameEvent, GameEventHandler, Scene, DialogueEntry, Choice, Plugin, PluginHookContext } from '../types/index.js';
 import { AudioManager } from './AudioManager.js';
 import { SaveManager } from './SaveManager.js';
 import { UIRenderer } from './UIRenderer.js';
 import { LanguageManager } from './LanguageManager.js';
+import { PluginManager } from './PluginManager.js';
 
 export class Game {
   private script: GameScript;
@@ -12,9 +13,11 @@ export class Game {
   private saveManager: SaveManager;
   private uiRenderer: UIRenderer;
   private languageManager: LanguageManager;
+  private pluginManager: PluginManager;
   private eventHandlers: { [key: string]: GameEventHandler[] } = {};
   private currentSceneDialogueHistory: DialogueEntry[] = [];
   private globalDialogueHistory: Array<{dialogue: DialogueEntry, sceneId: string, timestamp: Date}> = [];
+  private isGameStarted = false;
 
   constructor(script: GameScript) {
     this.script = script;
@@ -28,6 +31,7 @@ export class Game {
     this.saveManager = new SaveManager();
     this.uiRenderer = new UIRenderer(this);
     this.languageManager = new LanguageManager();
+    this.pluginManager = new PluginManager(this);
   }
 
   // Mount game to DOM element
@@ -40,7 +44,7 @@ export class Game {
     this.initialize();
   }
 
-  private initialize(): void {
+  private async initialize(): Promise<void> {
     // Initialize language manager
     this.languageManager.initialize(this.script);
     
@@ -53,6 +57,15 @@ export class Game {
     this.container.style.backgroundColor = '#000';
     this.container.style.fontFamily = 'Arial, sans-serif';
 
+    // Initialize plugins
+    await this.pluginManager.initialize();
+
+    // Execute onStart hook
+    if (!this.isGameStarted) {
+      await this.pluginManager.executeHooks('onStart', this.pluginManager.createHookContext());
+      this.isGameStarted = true;
+    }
+
     // Render initial UI
     this.uiRenderer.render(this.container);
     
@@ -64,19 +77,27 @@ export class Game {
   }
 
   // Scene management
-  startScene(sceneId: string, fadeOptions?: { backgroundFade?: boolean; backgroundAnimation?: any }): void {
+  async startScene(sceneId: string, fadeOptions?: { backgroundFade?: boolean; backgroundAnimation?: any }): Promise<void> {
     const scene = this.script.scenes.find(s => s.id === sceneId);
     if (!scene) {
       console.error(`Scene "${sceneId}" not found`);
       return;
     }
 
+    // Execute onSceneWillStart hook
+    const context = this.pluginManager.createHookContext({ scene });
+    await this.pluginManager.executeHooks('onSceneWillStart', context);
+
     this.state.currentScene = sceneId;
     this.state.currentDialogue = 0;
     this.currentSceneDialogueHistory = [];
 
     if (scene.music) {
+      // Execute music hooks
+      const musicContext = this.pluginManager.createHookContext({ scene, music: scene.music });
+      await this.pluginManager.executeHooks('onMusicWillPlay', musicContext);
       this.audioManager.playMusic(scene.music);
+      await this.pluginManager.executeHooks('onMusicPlayed', musicContext);
     }
 
     if (fadeOptions?.backgroundFade) {
@@ -84,18 +105,23 @@ export class Game {
     } else {
       this.uiRenderer.updateScene(scene);
     }
-    this.showDialogue();
+    
+    await this.showDialogue();
 
     this.emit('scene', { scene });
+
+    // Execute onSceneStarted hook
+    await this.pluginManager.executeHooks('onSceneStarted', context);
   }
 
   // Dialogue management
-  private showDialogue(): void {
+  private async showDialogue(): Promise<void> {
     const currentScene = this.getCurrentScene();
     if (!currentScene) return;
 
     const dialogue = currentScene.dialogue[this.state.currentDialogue];
     if (!dialogue) {
+      await this.pluginManager.executeHooks('onEnd', this.pluginManager.createHookContext());
       this.emit('end', {});
       return;
     }
@@ -115,11 +141,21 @@ export class Game {
       });
     }
 
+    // Execute onDialogueWillDisplay hook
+    const context = this.pluginManager.createHookContext({ 
+      scene: currentScene, 
+      dialogue 
+    });
+    await this.pluginManager.executeHooks('onDialogueWillDisplay', context);
+
     this.uiRenderer.updateDialogue(dialogue);
     this.emit('dialogue', { dialogue });
+
+    // Execute onDialogueDisplayed hook
+    await this.pluginManager.executeHooks('onDialogueDisplayed', context);
   }
 
-  next(): void {
+  async next(): Promise<void> {
     const currentScene = this.getCurrentScene();
     if (!currentScene) return;
 
@@ -127,30 +163,57 @@ export class Game {
     if (!dialogue) return;
 
     if (dialogue.action) {
-      this.handleAction(dialogue.action, dialogue.target);
+      await this.handleAction(dialogue.action, dialogue.target);
       return;
     }
 
     if (dialogue.choices && dialogue.choices.length > 0) {
+      // Execute onChoicesWillDisplay hook
+      const context = this.pluginManager.createHookContext({ 
+        scene: currentScene, 
+        dialogue,
+        choices: dialogue.choices 
+      });
+      await this.pluginManager.executeHooks('onChoicesWillDisplay', context);
+      
       this.uiRenderer.showChoices(dialogue.choices);
+      
+      // Execute onChoicesDisplayed hook
+      await this.pluginManager.executeHooks('onChoicesDisplayed', context);
       return;
     }
 
+    // Execute onDialogueWillHide hook
+    const hideContext = this.pluginManager.createHookContext({ 
+      scene: currentScene, 
+      dialogue 
+    });
+    await this.pluginManager.executeHooks('onDialogueWillHide', hideContext);
+
     this.state.currentDialogue++;
     if (this.state.currentDialogue >= currentScene.dialogue.length) {
+      await this.pluginManager.executeHooks('onEnd', this.pluginManager.createHookContext());
       this.emit('end', {});
       return;
     }
 
-    this.showDialogue();
+    // Execute onDialogueHidden hook
+    await this.pluginManager.executeHooks('onDialogueHidden', hideContext);
+
+    await this.showDialogue();
   }
 
-  makeChoice(choice: Choice): void {
+  async makeChoice(choice: Choice): Promise<void> {
     this.state.history.push(`Choice: ${choice.text}`);
-    this.handleAction(choice.action, choice.target);
+    
+    // Execute onChoiceSelected hook
+    const context = this.pluginManager.createHookContext({ choice });
+    await this.pluginManager.executeHooks('onChoiceSelected', context);
+    
+    await this.handleAction(choice.action, choice.target);
   }
 
-  private handleAction(action: string, target?: string): void {
+  private async handleAction(action: string, target?: string): Promise<void> {
     const currentScene = this.getCurrentScene();
     const currentDialogue = currentScene?.dialogue[this.state.currentDialogue];
     
@@ -164,10 +227,24 @@ export class Game {
             backgroundAnimation: typeof fadeAnimation?.backgroundFade === 'object' ? 
                                fadeAnimation.backgroundFade : undefined
           };
-          this.startScene(target, fadeOptions);
+          
+          // Execute onSceneWillEnd hook for current scene
+          if (currentScene) {
+            await this.pluginManager.executeHooks('onSceneWillEnd', 
+              this.pluginManager.createHookContext({ scene: currentScene }));
+          }
+          
+          await this.startScene(target, fadeOptions);
+          
+          // Execute onSceneEnded hook for previous scene
+          if (currentScene) {
+            await this.pluginManager.executeHooks('onSceneEnded', 
+              this.pluginManager.createHookContext({ scene: currentScene }));
+          }
         }
         break;
       case 'end':
+        await this.pluginManager.executeHooks('onEnd', this.pluginManager.createHookContext());
         this.emit('end', {});
         break;
       case 'save':
@@ -180,36 +257,74 @@ export class Game {
   }
 
   // Save/Load system
-  saveGame(slot: number = 0): void {
+  async saveGame(slot: number = 0): Promise<void> {
+    // Execute onWillSave hook
+    const context = this.pluginManager.createHookContext({ slot });
+    await this.pluginManager.executeHooks('onWillSave', context);
+    
     this.state.savedAt = new Date();
     this.saveManager.save(slot, this.state);
     this.emit('save', { slot });
+    
+    // Execute onSaved hook
+    await this.pluginManager.executeHooks('onSaved', context);
   }
 
-  loadGame(slot: number = 0): void {
+  async loadGame(slot: number = 0): Promise<void> {
+    // Execute onWillLoad hook
+    const context = this.pluginManager.createHookContext({ slot });
+    await this.pluginManager.executeHooks('onWillLoad', context);
+    
     const savedState = this.saveManager.load(slot);
     if (savedState) {
       this.state = savedState;
-      this.startScene(this.state.currentScene, { backgroundFade: true });
+      await this.startScene(this.state.currentScene, { backgroundFade: true });
       this.emit('load', { slot });
+      
+      // Execute onLoaded hook
+      await this.pluginManager.executeHooks('onLoaded', context);
     }
   }
 
-  showMainMenu(): void {
+  async showMainMenu(): Promise<void> {
+    // Execute onMenuWillShow hook
+    const context = this.pluginManager.createHookContext({ menuType: 'main' });
+    await this.pluginManager.executeHooks('onMenuWillShow', context);
+    
     this.uiRenderer.showMainMenu();
+    
+    // Execute onMenuShown hook
+    await this.pluginManager.executeHooks('onMenuShown', context);
   }
 
-  startNewGame(): void {
+  async startNewGame(): Promise<void> {
     this.globalDialogueHistory = [];
     this.state.currentDialogue = 0;
     this.state.currentScene = this.script.scenes[0]?.id || '';
+    
+    // Execute onMenuWillHide hook
+    const hideContext = this.pluginManager.createHookContext({ menuType: 'main' });
+    await this.pluginManager.executeHooks('onMenuWillHide', hideContext);
+    
     this.uiRenderer.hideMainMenu();
-    this.startScene(this.state.currentScene);
+    
+    // Execute onMenuHidden hook
+    await this.pluginManager.executeHooks('onMenuHidden', hideContext);
+    
+    await this.startScene(this.state.currentScene);
   }
 
-  continueGame(): void {
+  async continueGame(): Promise<void> {
+    // Execute onMenuWillHide hook
+    const hideContext = this.pluginManager.createHookContext({ menuType: 'main' });
+    await this.pluginManager.executeHooks('onMenuWillHide', hideContext);
+    
     this.uiRenderer.hideMainMenu();
-    this.startScene(this.state.currentScene, { backgroundFade: true });
+    
+    // Execute onMenuHidden hook
+    await this.pluginManager.executeHooks('onMenuHidden', hideContext);
+    
+    await this.startScene(this.state.currentScene, { backgroundFade: true });
   }
 
   // Event system
@@ -259,8 +374,18 @@ export class Game {
     return this.languageManager.getCurrentLanguage();
   }
 
-  setLanguage(languageCode: string): void {
+  async setLanguage(languageCode: string): Promise<void> {
+    // Execute onLanguageWillChange hook
+    const context: PluginHookContext = this.pluginManager.createHookContext({ 
+      language: languageCode,
+      previousLanguage: this.languageManager.getCurrentLanguage()
+    });
+    await this.pluginManager.executeHooks('onLanguageWillChange', context);
+    
     this.languageManager.setLanguage(languageCode);
+    
+    // Execute onLanguageChanged hook
+    await this.pluginManager.executeHooks('onLanguageChanged', context);
   }
 
   getAvailableLanguages() {
@@ -285,5 +410,35 @@ export class Game {
 
   getConfirmModal() {
     return this.uiRenderer.getConfirmModal();
+  }
+
+  // Plugin system methods
+  getPluginManager(): PluginManager {
+    return this.pluginManager;
+  }
+
+  async registerPlugin(plugin: Plugin): Promise<void> {
+    return this.pluginManager.register(plugin);
+  }
+
+  async unregisterPlugin(pluginName: string): Promise<void> {
+    return this.pluginManager.unregister(pluginName);
+  }
+
+  getPlugin(name: string): any {
+    return this.pluginManager.getPlugin(name);
+  }
+
+  getPluginAPI(name: string): any {
+    return this.pluginManager.getPluginAPI(name);
+  }
+
+  hasPlugin(name: string): boolean {
+    return this.pluginManager.hasPlugin(name);
+  }
+
+  async emitCustomEvent(eventName: string, data: any = {}): Promise<void> {
+    const context = this.pluginManager.createHookContext(data);
+    await this.pluginManager.executeCustomHooks(eventName, context);
   }
 } 
