@@ -1,3 +1,14 @@
+/**
+ * YUKINOVEL
+ * @author: Yukiookii
+ * @version: 1.0.0
+ * @description: A simple web visual novel engine.
+ * @license: MIT
+ * @source: https://github.com/MegumiKatou02/Yukinovel
+ * @issues: https://github.com/MegumiKatou02/Yukinovel/issues
+ * 
+ */
+
 // Main exports
 export { Game } from './core/Game.js';
 export { AudioManager } from './core/AudioManager.js';
