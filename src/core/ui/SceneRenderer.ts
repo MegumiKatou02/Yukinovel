@@ -167,6 +167,25 @@ export class SceneRenderer {
     }
   }
 
+  private getScaleAwareAnimation(animation: AnimationType): string {
+    const scaleAwareAnimations: { [key: string]: string } = {
+      'fadeIn': 'fadeInWithScale',
+      'fadeOut': 'fadeOutWithScale', 
+      'fadeInLeft': 'fadeInLeftWithScale',
+      'fadeInRight': 'fadeInRightWithScale',
+      'fadeInUp': 'fadeInUpWithScale',
+      'fadeInDown': 'fadeInDownWithScale',
+      'slideInLeft': 'slideInLeftWithScale',
+      'slideInRight': 'slideInRightWithScale',
+      'slideInUp': 'slideInUpWithScale',
+      'slideInDown': 'slideInDownWithScale',
+      'bounceIn': 'bounceInWithScale',
+      'zoomIn': 'zoomInWithScale'
+    };
+    
+    return scaleAwareAnimations[animation] || animation;
+  }
+
   private fadeOutCharacter(charElement: HTMLElement, callback: () => void, customDuration?: number, animation: AnimationType = 'fadeOut'): void {
     const duration = customDuration || this.fadeAnimationDuration;
     // console.log(`Character fade out: ${animation}, duration: ${duration}ms`);
@@ -178,11 +197,12 @@ export class SceneRenderer {
     
     charElement.offsetHeight;
     
-    charElement.classList.add('animate__animated', `animate__${animation}`);
+    const scaleAwareAnimation = this.getScaleAwareAnimation(animation);
+    charElement.classList.add('animate__animated', `animate__${scaleAwareAnimation}`);
     
     const handleAnimationEnd = () => {
-      // console.log(`Character fade out completed: ${animation}`);
-      charElement.classList.remove('animate__animated', `animate__${animation}`);
+      // console.log(`Character fade out completed: ${scaleAwareAnimation}`);
+      charElement.classList.remove('animate__animated', `animate__${scaleAwareAnimation}`);
       charElement.removeEventListener('animationend', handleAnimationEnd);
       callback();
     };
@@ -200,11 +220,12 @@ export class SceneRenderer {
     
     charElement.offsetHeight;
     
-    charElement.classList.add('animate__animated', `animate__${animation}`);
+    const scaleAwareAnimation = this.getScaleAwareAnimation(animation);
+    charElement.classList.add('animate__animated', `animate__${scaleAwareAnimation}`);
     
     const handleAnimationEnd = () => {
-      // console.log(`Character fade in completed: ${animation}`);
-      charElement.classList.remove('animate__animated', `animate__${animation}`);
+      // console.log(`Character fade in completed: ${scaleAwareAnimation}`);
+      charElement.classList.remove('animate__animated', `animate__${scaleAwareAnimation}`);
       charElement.removeEventListener('animationend', handleAnimationEnd);
     };
     charElement.addEventListener('animationend', handleAnimationEnd);
@@ -347,6 +368,9 @@ export class SceneRenderer {
       charElement.style.width = typeof width === 'string' ? width : `${width}px`;
       charElement.style.height = typeof height === 'string' ? height : `${height}px`;
       charElement.style.backgroundImage = `url(${character.image || ''})`;
+      
+      // Sử dụng CSS custom property để lưu scale
+      charElement.style.setProperty('--character-scale', scale.toString());
       charElement.style.transform = `scale(${scale})`;
 
       if (isNewCharacter && fadeInNewCharacters) {
