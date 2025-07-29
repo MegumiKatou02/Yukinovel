@@ -1,5 +1,5 @@
-import { PluginBase } from '../../src/index.js';
-import type { Game, PluginHookContext, PluginHooks, PluginManager, PluginMetadata } from '../../src/index.js'
+import { PluginBase } from "../utils/createPlugin";
+import type { Game, PluginHookContext, PluginHooks, PluginManager, PluginMetadata } from '../index.js'
 
 /**
  * Analytics Plugin
