@@ -45,7 +45,6 @@ export class Game {
   }
 
   private async initialize(): Promise<void> {
-    // Initialize language manager
     this.languageManager.initialize(this.script);
     
     // Setup container
