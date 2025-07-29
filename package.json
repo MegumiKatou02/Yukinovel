@@ -1,10 +1,20 @@
 {
   "name": "yukinovel",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A powerful TypeScript framework for creating beautiful Visual Novel games",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js",
+      "types": "./dist/plugins/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
