@@ -8,4 +8,3 @@ dist_test/
 # *.css
 
 node_modules/
-examples/
