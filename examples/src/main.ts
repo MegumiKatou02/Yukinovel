@@ -1,15 +1,11 @@
 import { script } from './script';
-// import { CustomPlugin } from './plugin.js';
 import { AnalyticsPlugin } from 'yukinovel/plugins';
-// import { AnalyticsPlugin } from '@megumikatou02/yukinovel/plugins';
-// import { createGame } from '@megumikatou02/yukinovel';
 import { createGame } from 'yukinovel';
-
 
 const game = createGame(script);
 
 game.on('dialogue', (_event) => {
-    // console.log('Dialogue:', event.data.dialogue);
+// console.log('Dialogue:', event.data.dialogue);
 });
 
 game.on('scene', (event) => {
@@ -30,7 +26,7 @@ game.on('end', (_event) => {
 
 /**
  * Plugin
- */
+*/
 
 game.registerPlugin(new AnalyticsPlugin());
 
